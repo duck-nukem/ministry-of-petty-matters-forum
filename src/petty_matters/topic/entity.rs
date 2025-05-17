@@ -1,7 +1,8 @@
 use crate::persistence::in_memory_repository::HasId;
 use chrono::{DateTime, Utc};
 
-pub type TopicId = u32;
+#[derive(Clone, Eq, PartialEq, Hash)]
+pub struct TopicId(u32);
 
 #[derive(Clone, Eq, PartialEq)]
 pub struct Topic {
@@ -17,7 +18,7 @@ pub struct Topic {
 impl Default for Topic {
     fn default() -> Self {
         Self {
-            id: 0,
+            id: TopicId(0),
             title: String::new(),
             content: String::new(),
             upvotes_count: 0,
@@ -30,7 +31,7 @@ impl Default for Topic {
 
 impl HasId<TopicId> for Topic {
     fn id(&self) -> TopicId {
-        self.id
+        self.id.clone()
     }
 }
 

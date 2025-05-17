@@ -1,10 +1,10 @@
-use crate::persistence::repository::Repository;
+use crate::error::Result;
+use crate::persistence::repository::{PageNumber, PageSize, Repository};
 use async_trait::async_trait;
 use std::collections::HashMap;
 use std::hash::Hash;
 use std::sync::Arc;
 use tokio::sync::Mutex;
-use crate::error::Result;
 
 pub struct InMemoryRepository<ID, Entity> {
     store: Arc<Mutex<HashMap<ID, Entity>>>,
@@ -31,6 +31,19 @@ where
     ID: Send + Sync + Eq + Hash + Clone,
     Entity: Send + Sync + Clone + HasId<ID>,
 {
+    async fn list(&self, page: PageNumber, page_size: PageSize) -> Result<Vec<Entity>> {
+        let offset = (page.0 - 1) * page_size.0;
+        Ok(self
+            .store
+            .lock()
+            .await
+            .values()
+            .skip(offset)
+            .take(page_size.0)
+            .cloned()
+            .collect())
+    }
+
     async fn save(&self, entity: Entity) -> Result<()> {
         self.store.lock().await.insert(entity.id(), entity);
         Ok(())
@@ -49,19 +62,18 @@ where
 #[cfg(test)]
 mod tests {
     use crate::persistence::in_memory_repository::{HasId, InMemoryRepository};
-    use crate::persistence::repository::Repository;
+    use crate::persistence::repository::{PageNumber, PageSize, Repository};
 
     type StubId = i32;
 
     #[derive(Clone)]
     struct StubEntity {
         id: StubId,
-        name: String,
     }
 
     impl StubEntity {
-        fn new(id: StubId, name: String) -> Self {
-            Self { id, name }
+        fn new(id: StubId) -> Self {
+            Self { id }
         }
     }
 
@@ -74,13 +86,16 @@ mod tests {
     #[tokio::test]
     async fn get_by_id_returns_result() {
         let repository: InMemoryRepository<StubId, StubEntity> = InMemoryRepository::new();
-        let stub_entity = StubEntity::new(1, "Test".to_string());
+        let stub_entity = StubEntity::new(1);
         repository
             .save(stub_entity)
             .await
             .expect("Failed to create entity");
 
-        let result = repository.get_by_id(&1).await.expect("Failed to retrieve entity");
+        let result = repository
+            .get_by_id(&1)
+            .await
+            .expect("Failed to retrieve entity");
 
         assert!(result.is_some_and(|e| e.id() == 1));
     }
@@ -89,7 +104,10 @@ mod tests {
     async fn get_by_id_returns_none_if_not_found() {
         let repository: InMemoryRepository<StubId, StubEntity> = InMemoryRepository::new();
 
-        let result = repository.get_by_id(&1).await.expect("Failed to retrieve entity");
+        let result = repository
+            .get_by_id(&1)
+            .await
+            .expect("Failed to retrieve entity");
 
         assert!(result.is_none());
     }
@@ -97,18 +115,40 @@ mod tests {
     #[tokio::test]
     async fn delete_by_id_removes_entity() {
         let repository: InMemoryRepository<StubId, StubEntity> = InMemoryRepository::new();
-        let stub_entity = StubEntity::new(1, "Test".to_string());
+        let stub_entity = StubEntity::new(1);
         repository
             .save(stub_entity.clone())
             .await
-            .expect("Failed to create entity");        
+            .expect("Failed to create entity");
         repository
             .delete(&stub_entity.id)
             .await
             .expect("Failed to create entity");
 
-        let result = repository.get_by_id(&1).await.expect("Failed to retrieve entity");
+        let result = repository
+            .get_by_id(&1)
+            .await
+            .expect("Failed to retrieve entity");
 
         assert!(result.is_none());
+    }
+
+    #[tokio::test]
+    async fn list_yields_a_collection_of_give_size_with_an_offset() {
+        let repository: InMemoryRepository<StubId, StubEntity> = InMemoryRepository::new();
+        for iteration in 1..10 {
+            let stub_entity = StubEntity::new(iteration);
+            repository
+                .save(stub_entity)
+                .await
+                .expect("Failed to create entity");
+        }
+
+        let entities = repository
+            .list(PageNumber(1), PageSize(2))
+            .await
+            .expect("Failed to create entity");
+
+        assert_eq!(entities.clone().len(), 2);
     }
 }

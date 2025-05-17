@@ -17,7 +17,7 @@ pub struct Topic {
 impl Default for Topic {
     fn default() -> Self {
         Self {
-            id: 1,
+            id: 0,
             title: String::new(),
             content: String::new(),
             upvotes_count: 0,
@@ -44,10 +44,10 @@ mod tests {
         let rough_expected_creation_time = Utc::now();
 
         let topic = Topic::default();
+
         let is_recent_creation_time = rough_expected_creation_time
             .signed_duration_since(topic.creation_time)
             <= chrono::Duration::seconds(3);
-
         assert!(is_recent_creation_time);
         assert_eq!(topic.last_updated_time, None);
         assert_eq!(topic.upvotes_count, 0);

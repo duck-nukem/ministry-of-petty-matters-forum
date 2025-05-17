@@ -34,7 +34,11 @@ unwrap_in_result = "deny"
 ok_expect = "deny"
 
 [dependencies]
-axum = "0.8.4"
+axum = { version = "0.8.4", features = ["macros"] }
 chrono = "0.4.41"
+sea-query = "0.32.5"
+sqlx = { version = "0.8.5", features = ["runtime-tokio"] }
 tokio = { version = "1.45.0", features = ["rt-multi-thread"] }
 async-trait = "0.1.88"
+askama = "0.14.0"
+serde = { version = "1.0.219", features = ["derive"] }

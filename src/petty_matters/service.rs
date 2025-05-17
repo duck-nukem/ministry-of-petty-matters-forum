@@ -1,12 +1,12 @@
 use crate::error::Result;
-use crate::persistence::repository::Repository;
+use crate::persistence::repository::{PageNumber, PageSize, Repository};
 use crate::petty_matters::topic::entity::{Topic, TopicId};
 use std::sync::Arc;
 
 type TopicRepository = dyn Repository<TopicId, Topic> + Send + Sync;
 
-struct TopicService {
-    topic_repository: Arc<TopicRepository>,
+pub struct TopicService {
+    pub topic_repository: Arc<TopicRepository>,
 }
 
 impl TopicService {
@@ -14,12 +14,16 @@ impl TopicService {
         Self { topic_repository }
     }
 
-    async fn start_topic(&self, topic: Topic) -> Result<()> {
+    pub async fn create_topic(&self, topic: Topic) -> Result<()> {
         self.topic_repository.save(topic).await
     }
     
-    async fn get_topic(&self, topic_id: &TopicId) -> Result<Option<Topic>> {
+    pub async fn get_topic(&self, topic_id: &TopicId) -> Result<Option<Topic>> {
         self.topic_repository.get_by_id(topic_id).await
+    }
+    
+    pub async fn list_topics(&self) -> Result<Vec<Topic>> {
+        self.topic_repository.list(PageNumber(1), PageSize(50)).await
     }
 }
 
@@ -36,7 +40,7 @@ mod tests {
         let topic_service = TopicService::new(Arc::new(topic_repository));
         let topic = Topic::default();
         
-        topic_service.start_topic(topic.clone()).await.expect("Failed to start topic");
+        topic_service.create_topic(topic.clone()).await.expect("Failed to start topic");
 
         assert!(topic_service.get_topic(&topic.id).await.is_ok_and(|result| result.is_some_and(|entity| entity == topic)));
     }

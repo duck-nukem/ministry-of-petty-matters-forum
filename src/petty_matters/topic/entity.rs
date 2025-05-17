@@ -1,18 +1,26 @@
+use std::fmt::{Display, Formatter};
 use crate::persistence::in_memory_repository::HasId;
 use chrono::{DateTime, Utc};
+use serde::Deserialize;
 
-#[derive(Clone, Eq, PartialEq, Hash)]
-pub struct TopicId(u32);
+#[derive(Clone, Deserialize, Eq, PartialEq, Hash)]
+pub struct TopicId(pub u32);
+
+impl Display for TopicId {
+    fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
+        write!(f, "{}", self.0)
+    }
+}
 
 #[derive(Clone, Eq, PartialEq)]
 pub struct Topic {
     pub id: TopicId,
-    title: String,
-    content: String,
-    upvotes_count: u32,
-    downvotes_count: u32,
-    creation_time: DateTime<Utc>,
-    last_updated_time: Option<DateTime<Utc>>,
+    pub title: String,
+    pub content: String,
+    pub upvotes_count: u32,
+    pub downvotes_count: u32,
+    pub creation_time: DateTime<Utc>,
+    pub last_updated_time: Option<DateTime<Utc>>,
 }
 
 impl Default for Topic {

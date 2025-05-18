@@ -12,7 +12,8 @@ use tower_http::services::ServeDir;
 mod petty_matters;
 mod persistence;
 mod error;
-
+mod view;
+mod time;
 
 #[tokio::main]
 #[allow(clippy::expect_used)]

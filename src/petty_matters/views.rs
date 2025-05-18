@@ -1,8 +1,10 @@
 use crate::petty_matters::service::TopicService;
 use crate::petty_matters::topic::entity::{Topic, TopicId};
+use crate::time::Seconds;
+use crate::view::cache_response;
 use askama::Template;
 use axum::extract::{Path, State};
-use axum::http::{header, StatusCode};
+use axum::http::StatusCode;
 use axum::response::{Html, IntoResponse, Redirect};
 use axum::routing::get;
 use axum::{Form, Router};
@@ -55,7 +57,7 @@ async fn register_petty_matter(
     State(service): State<Arc<TopicService>>,
     form: Form<PettyMattersRegistrationForm>,
 ) -> Result<impl IntoResponse, StatusCode> {
-    let topic = Topic::new(form.subject.to_owned(), form.content.to_owned());
+    let topic = Topic::new(form.subject.clone(), form.content.clone());
     service
         .create_topic(topic)
         .await
@@ -75,13 +77,7 @@ async fn view_petty_matter(
     let template = PettyMatter { topic }
         .render()
         .map_err(|_| StatusCode::INTERNAL_SERVER_ERROR)?;
-    let mut response = Html(template).into_response();
-    // Cache the response for 60 seconds to allow preloading URLs from the browser
-    response.headers_mut().insert(
-        header::CACHE_CONTROL,
-        header::HeaderValue::from_static("max-age=60"),
-    );
-    Ok(response)
+    Ok(cache_response(Html(template), Some(Seconds(60))))
 }
 
 pub fn topics_router(service: Arc<TopicService>) -> Router {

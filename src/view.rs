@@ -1,7 +1,6 @@
 use crate::time::Seconds;
 use axum::http::header;
 use axum::response::IntoResponse;
-use std::fmt::Display;
 
 pub fn cache_response(
     original_response: impl IntoResponse,

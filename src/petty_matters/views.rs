@@ -3,13 +3,14 @@ use crate::petty_matters::topic::entity::{Topic, TopicId};
 use crate::time::Seconds;
 use crate::view::cache_response;
 use askama::Template;
-use axum::extract::{Path, State};
+use axum::extract::{Path, Query, State};
 use axum::http::StatusCode;
 use axum::response::{Html, IntoResponse, Redirect};
 use axum::routing::get;
 use axum::{Form, Router};
 use serde::Deserialize;
 use std::sync::Arc;
+use crate::persistence::repository::{ListParameters, PageNumber, PageSize};
 
 #[derive(Template)]
 #[template(path = "petty_matters/list.html")]
@@ -33,11 +34,22 @@ struct PettyMattersRegistrationForm {
     content: String,
 }
 
+#[derive(Clone, Deserialize)]
+struct Pagination {
+    page: Option<PageNumber>,
+    page_size: Option<PageSize>,
+}
+
 async fn list_petty_matters(
     State(service): State<Arc<TopicService>>,
+    pagination: Query<Pagination>
 ) -> Result<impl IntoResponse, StatusCode> {
+    let list_parameters = ListParameters {
+        page_number: pagination.page.clone().unwrap_or(PageNumber(1)),
+        page_size: pagination.page_size.clone().unwrap_or(PageSize(10)),
+    };
     let topics = service
-        .list_topics()
+        .list_topics(list_parameters)
         .await
         .map_err(|_| StatusCode::INTERNAL_SERVER_ERROR)?;
     let template = PettyMattersList { topics }

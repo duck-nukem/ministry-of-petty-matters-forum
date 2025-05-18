@@ -1,3 +1,4 @@
+use chrono::DateTime;
 use crate::petty_matters::service::TopicService;
 use crate::petty_matters::topic::entity::{Topic, TopicId};
 use askama::Template;
@@ -8,6 +9,7 @@ use axum::routing::get;
 use axum::{Form, Router};
 use std::sync::Arc;
 use serde::Deserialize;
+use uuid::Uuid;
 
 #[derive(Template)]
 #[template(path = "petty_matters/list.html")]
@@ -58,12 +60,12 @@ async fn register_petty_matter(
     form: Form<PettyMattersRegistrationForm>,
 ) -> Result<impl IntoResponse, StatusCode> {
     let topic = Topic {
-        id: TopicId(1),
+        id: TopicId(Uuid::new_v4()),
         title: form.subject.clone(),
         content: form.content.clone(),
         upvotes_count: 0,
         downvotes_count: 0,
-        creation_time: Default::default(),
+        creation_time: DateTime::default(),
         last_updated_time: None,
     };
     service

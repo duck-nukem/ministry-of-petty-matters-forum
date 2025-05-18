@@ -2,9 +2,10 @@ use std::fmt::{Display, Formatter};
 use crate::persistence::in_memory_repository::HasId;
 use chrono::{DateTime, Utc};
 use serde::Deserialize;
+use uuid::Uuid;
 
 #[derive(Clone, Deserialize, Eq, PartialEq, Hash)]
-pub struct TopicId(pub u32);
+pub struct TopicId(pub Uuid);
 
 impl Display for TopicId {
     fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
@@ -26,7 +27,7 @@ pub struct Topic {
 impl Default for Topic {
     fn default() -> Self {
         Self {
-            id: TopicId(0),
+            id: TopicId(Uuid::new_v4()),
             title: String::new(),
             content: String::new(),
             upvotes_count: 0,

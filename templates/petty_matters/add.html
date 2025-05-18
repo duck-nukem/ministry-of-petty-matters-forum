@@ -1,17 +1,12 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <title>Register Petty Matter</title>
-</head>
-<body>
+{% extends "base.html" %}
+{% block title %}Register a Petty Matter{% endblock %}
+{% block content %}
+<h2>Register a Petty Matter</h2>
 <form method="POST" action="/petty-matters">
-    <h1>Register Petty Matter</h1>
     <label for="subject">Name:</label>
     <input type="text" id="subject" name="subject" required>
     <label for="content">Description:</label>
     <textarea id="content" name="content" required></textarea>
     <button type="submit">Submit</button>
 </form>
-</body>
-</html>
+{% endblock %}

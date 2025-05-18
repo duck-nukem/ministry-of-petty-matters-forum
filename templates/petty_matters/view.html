@@ -1,11 +1,6 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <title>Official Record of Petty Matters</title>
-</head>
-<body>
-<h1>Petty Matters</h1>
-<h2>{{ topic.title }}</h2>
-<p>{{ topic.content }}</p>
-</body>
-</html>
+{% extends "base.html" %}
+{% block title %}{{topic.title}}{% endblock %}
+{% block content %}
+    <h2>{{ topic.title }}</h2>
+    <p>{{ topic.content }}</p>
+{% endblock %}

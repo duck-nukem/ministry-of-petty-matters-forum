@@ -1,4 +1,3 @@
-use chrono::DateTime;
 use crate::petty_matters::service::TopicService;
 use crate::petty_matters::topic::entity::{Topic, TopicId};
 use askama::Template;
@@ -7,9 +6,8 @@ use axum::http::StatusCode;
 use axum::response::{Html, IntoResponse, Redirect};
 use axum::routing::get;
 use axum::{Form, Router};
-use std::sync::Arc;
 use serde::Deserialize;
-use uuid::Uuid;
+use std::sync::Arc;
 
 #[derive(Template)]
 #[template(path = "petty_matters/list.html")]
@@ -40,26 +38,24 @@ async fn list_petty_matters(
         .list_topics()
         .await
         .map_err(|_| StatusCode::INTERNAL_SERVER_ERROR)?;
-    let template = PettyMattersList { topics };
-    let rendered = template
+    let template = PettyMattersList { topics }
         .render()
         .map_err(|_| StatusCode::INTERNAL_SERVER_ERROR)?;
-    Ok(Html(rendered))
+    Ok(Html(template))
 }
 
 async fn render_registration_form() -> Result<impl IntoResponse, StatusCode> {
-    let template = PettyMattersRegistration {};
-    let rendered = template
+    let template = PettyMattersRegistration {}
         .render()
         .map_err(|_| StatusCode::INTERNAL_SERVER_ERROR)?;
-    Ok(Html(rendered))
+    Ok(Html(template))
 }
 
 async fn register_petty_matter(
     State(service): State<Arc<TopicService>>,
     form: Form<PettyMattersRegistrationForm>,
 ) -> Result<impl IntoResponse, StatusCode> {
-    let topic = Topic::new(form.subject.clone(), form.content.clone());
+    let topic = Topic::new(form.subject.to_owned(), form.content.to_owned());
     service
         .create_topic(topic)
         .await
@@ -71,17 +67,15 @@ async fn view_petty_matter(
     Path(topic_id): Path<TopicId>,
     State(service): State<Arc<TopicService>>,
 ) -> Result<impl IntoResponse, StatusCode> {
-    let found = service
+    let topic = service
         .get_topic(&topic_id)
         .await
-        .map_err(|_| StatusCode::INTERNAL_SERVER_ERROR)?;
-    let template = PettyMatter {
-        topic: found.ok_or(StatusCode::NOT_FOUND)?,
-    };
-    let rendered = template
+        .map_err(|_| StatusCode::INTERNAL_SERVER_ERROR)?
+        .ok_or(StatusCode::NOT_FOUND)?;
+    let template = PettyMatter { topic }
         .render()
         .map_err(|_| StatusCode::INTERNAL_SERVER_ERROR)?;
-    Ok(Html(rendered))
+    Ok(Html(template))
 }
 
 pub fn topics_router(service: Arc<TopicService>) -> Router {

@@ -1,12 +1,14 @@
 {% extends "base.html" %}
 {% block title %}Register a Petty Matter{% endblock %}
 {% block content %}
-<h2>Register a Petty Matter</h2>
-<form method="POST" action="/petty-matters">
-    <label for="subject">Name:</label>
-    <input type="text" id="subject" name="subject" required>
-    <label for="content">Description:</label>
-    <textarea id="content" name="content" required></textarea>
-    <button type="submit">Submit</button>
-</form>
+<h1>Register a Petty Matter</h1>
+<section>
+    <form method="POST" action="/petty-matters">
+        <label for="subject">Name:</label>
+        <input type="text" id="subject" name="subject" required>
+        <label for="content">Description:</label>
+        <textarea id="content" name="content" required></textarea>
+        <button tabindex="0" type="submit">Press Enter to Register</button>
+    </form>
+</section>
 {% endblock %}

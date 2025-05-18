@@ -3,11 +3,11 @@
 <head>
     <title>{% block title %}{{ title }}{% endblock %} - Ministry of Petty Matters</title>
     {% block head %}{% endblock %}
-    <link rel="stylesheet" href="/assets/style.css"/>
+    <link rel="stylesheet" href="/assets/brutalism.css"/>
     <script src="/assets/htmx.js"></script>
     <script src="/assets/htmx-ext-preload.js"></script>
 </head>
-<body hx-ext="preload">
+<body hx-ext="preload" class="container">
 <div id="content">
     {% block content %}<p>Placeholder content</p>{% endblock %}
 </div>

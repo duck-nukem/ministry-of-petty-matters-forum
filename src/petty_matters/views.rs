@@ -2,7 +2,7 @@ use crate::petty_matters::service::TopicService;
 use crate::petty_matters::topic::entity::{Topic, TopicId};
 use askama::Template;
 use axum::extract::{Path, State};
-use axum::http::StatusCode;
+use axum::http::{header, StatusCode};
 use axum::response::{Html, IntoResponse, Redirect};
 use axum::routing::get;
 use axum::{Form, Router};
@@ -75,7 +75,13 @@ async fn view_petty_matter(
     let template = PettyMatter { topic }
         .render()
         .map_err(|_| StatusCode::INTERNAL_SERVER_ERROR)?;
-    Ok(Html(template))
+    let mut response = Html(template).into_response();
+    // Cache the response for 60 seconds to allow preloading URLs from the browser
+    response.headers_mut().insert(
+        header::CACHE_CONTROL,
+        header::HeaderValue::from_static("max-age=60"),
+    );
+    Ok(response)
 }
 
 pub fn topics_router(service: Arc<TopicService>) -> Router {

@@ -7,6 +7,7 @@ use axum::{
 use std::sync::Arc;
 use petty_matters::service::TopicService;
 use crate::persistence::in_memory_repository::InMemoryRepository;
+use tower_http::services::ServeDir;
 
 mod petty_matters;
 mod persistence;
@@ -21,7 +22,9 @@ async fn main() {
 
     let app = Router::new()
         .route("/", get(|| async { Html("Hello, world!") }))
-        .nest("/petty-matters", topics_router(topic_service));
+        .nest("/petty-matters", topics_router(topic_service))
+        .nest_service("/assets", ServeDir::new("assets"));
+
 
     let listener = tokio::net::TcpListener::bind("0.0.0.0:3000").await.expect("Field to start the server, maybe the port is already in use");
     axum::serve(listener, app).await.expect("Failed to start the server. This sucks!");

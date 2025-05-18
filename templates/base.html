@@ -1,27 +1,13 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <title>{% block title %}{{ title }} - Ministry of Petty Matters{% endblock %}</title>
+    <title>{% block title %}{{ title }}{% endblock %} - Ministry of Petty Matters</title>
     {% block head %}{% endblock %}
-    <style>
-        @import url('https://fonts.googleapis.com/css2?family=Bodoni+Moda:ital,opsz,wght@0,6..96,400..900;1,6..96,400..900&family=IM+Fell+English:ital@0;1&family=Oswald:wght@200..700&family=Source+Serif+4:ital,opsz,wght@0,8..60,200..900;1,8..60,200..900&display=swap');
-
-        body {
-            font-family: "IM Fell English", serif;
-            margin: 40px auto;
-            max-width: 650px;
-            line-height: 1.6;
-            font-size: 18px;
-            color: #444;
-            padding: 0 10px
-        }
-
-        h1, h2, h3 {
-            line-height: 1.2
-        }
-    </style>
+    <link rel="stylesheet" href="/assets/style.css"/>
+    <script src="/assets/htmx.js"></script>
+    <script src="/assets/htmx-ext-preload.js"></script>
 </head>
-<body>
+<body hx-ext="preload">
 <div id="content">
     {% block content %}<p>Placeholder content</p>{% endblock %}
 </div>

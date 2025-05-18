@@ -3,7 +3,7 @@
 {% block content %}
     <h1>Petty Matters</h1>
     {% for topic in topics %}
-        <h2><a href="/petty-matters/{{ topic.id }}">{{ topic.title }}</a></h2>
+        <h2><a href="/petty-matters/{{ topic.id }}" preload="mouseover">{{ topic.title }}</a></h2>
     {% endfor %}
     <a href="/petty-matters/register">File your petty matter</a>
 {% endblock %}

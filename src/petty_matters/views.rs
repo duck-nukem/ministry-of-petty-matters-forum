@@ -59,15 +59,7 @@ async fn register_petty_matter(
     State(service): State<Arc<TopicService>>,
     form: Form<PettyMattersRegistrationForm>,
 ) -> Result<impl IntoResponse, StatusCode> {
-    let topic = Topic {
-        id: TopicId(Uuid::new_v4()),
-        title: form.subject.clone(),
-        content: form.content.clone(),
-        upvotes_count: 0,
-        downvotes_count: 0,
-        creation_time: DateTime::default(),
-        last_updated_time: None,
-    };
+    let topic = Topic::new(form.subject.clone(), form.content.clone());
     service
         .create_topic(topic)
         .await

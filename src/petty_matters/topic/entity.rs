@@ -38,6 +38,20 @@ impl Default for Topic {
     }
 }
 
+impl Topic {
+    pub(crate) fn new(title: String, content: String) -> Self {
+        Self {
+            id: TopicId(Uuid::new_v4()),
+            title,
+            content,
+            upvotes_count: 0,
+            downvotes_count: 0,
+            creation_time: Utc::now(),
+            last_updated_time: None,
+        }
+    }
+}
+
 impl HasId<TopicId> for Topic {
     fn id(&self) -> TopicId {
         self.id.clone()

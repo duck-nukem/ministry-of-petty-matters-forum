@@ -1,7 +1,14 @@
 {% extends "base.html" %}
 {% block title %}Petty Matters{% endblock %}
 {% block content %}
-<h1>Petty Matters</h1>
+<div class="row">
+    <div class="col">
+        <h1>Petty Matters</h1>
+    </div>
+    <div class="col">
+        <a class="page-header-primary-button button" href="/petty-matters/register">File your petty matter</a>
+    </div>
+</div>
 <section>
     {% if topics.len() == 0 %}
     <p>No Petty Matters registered</p>
@@ -21,6 +28,5 @@
         </tbody>
     </table>
     {% endif %}
-    <a class="button" href="/petty-matters/register">File your petty matter</a>
 </section>
 {% endblock %}

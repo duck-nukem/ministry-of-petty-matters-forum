@@ -1,12 +1,12 @@
+use crate::persistence::in_memory_repository::InMemoryRepository;
 use crate::petty_matters::views::topics_router;
-use axum::response::Html;
+use axum::response::Redirect;
 use axum::{
     routing::get,
     Router,
 };
-use std::sync::Arc;
 use petty_matters::service::TopicService;
-use crate::persistence::in_memory_repository::InMemoryRepository;
+use std::sync::Arc;
 use tower_http::services::ServeDir;
 
 mod petty_matters;
@@ -22,7 +22,7 @@ async fn main() {
     let topic_service = Arc::new(TopicService::new(topic_repository));
 
     let app = Router::new()
-        .route("/", get(|| async { Html("Hello, world!") }))
+        .route("/", get(|| async { Redirect::to("/petty-matters") }))
         .nest("/petty-matters", topics_router(topic_service))
         .nest_service("/assets", ServeDir::new("assets"));
 

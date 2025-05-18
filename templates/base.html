@@ -1,8 +1,13 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
     <title>{% block title %}{{ title }}{% endblock %} - Ministry of Petty Matters</title>
     {% block head %}{% endblock %}
+    <link rel="icon" href="/assets/favicon.ico" sizes="any">
+    <link rel="icon" href="/assets/icon.svg" type="image/svg+xml">
+    <link rel="apple-touch-icon" href="/assets/icon.png">
     <link rel="stylesheet" href="/assets/brutalism.css"/>
     <script src="/assets/htmx.js"></script>
     <script src="/assets/htmx-ext-preload.js"></script>
@@ -11,5 +16,6 @@
 <div id="content">
     {% block content %}<p>Placeholder content</p>{% endblock %}
 </div>
+<script src="/assets/app.js"></script>
 </body>
 </html>

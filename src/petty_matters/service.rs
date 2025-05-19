@@ -1,5 +1,5 @@
 use crate::error::Result;
-use crate::persistence::repository::{ListParameters, Repository};
+use crate::persistence::repository::{ListParameters, Page, Repository};
 use crate::petty_matters::topic::entity::{Topic, TopicId};
 use std::sync::Arc;
 
@@ -22,7 +22,7 @@ impl TopicService {
         self.topic_repository.get_by_id(topic_id).await
     }
 
-    pub async fn list_topics(&self, list_parameters: ListParameters) -> Result<Vec<Topic>> {
+    pub async fn list_topics(&self, list_parameters: ListParameters) -> Result<Page<Topic>> {
         self.topic_repository.list(list_parameters).await
     }
 }

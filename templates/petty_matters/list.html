@@ -10,7 +10,7 @@
     </div>
 </div>
 <section>
-    {% if topics.len() == 0 %}
+    {% if topics.items.len() == 0 %}
     <p>No Petty Matters registered</p>
     {% else %}
     <table>
@@ -21,7 +21,7 @@
         </tr>
         </thead>
         <tbody>
-        {% for topic in topics %}
+        {% for topic in topics.items %}
         <tr>
             <td><a href="/petty-matters/{{ topic.id }}" preload="mouseover">{{ topic.title }}</a></td>
             <td data-utcdate="{{ topic.creation_time.to_rfc3339() }}">{{ topic.creation_time.to_rfc3339() }}</td>
@@ -29,6 +29,22 @@
         {% endfor %}
         </tbody>
     </table>
+    {% endif %}
+
+    <div class="table-pagination-footer">
+        {% if !topics.is_first_page() %}
+        <a preload="mouseover"
+           href="/petty-matters?page={{ topics.page_number.0 - 1}}&page_size={{ topics.page_size.0}}">
+            <b><< Page {{ topics.page_number.0 - 1}}</b>
+        </a>
+        {% endif %}
+
+        {% if topics.has_next_page() %}
+        <a preload="mouseover"
+           href="/petty-matters?page={{ topics.page_number.0 + 1}}&page_size={{ topics.page_size.0}}">
+            <b>Page {{ topics.page_number.0 + 1}} >></b>
+        </a>
+    </div>
     {% endif %}
 </section>
 {% endblock %}

@@ -1,5 +1,5 @@
 use crate::error::Result;
-use crate::persistence::repository::{ListParameters, Repository};
+use crate::persistence::repository::{ListParameters, Page, Repository};
 use async_trait::async_trait;
 use std::collections::HashMap;
 use std::hash::Hash;
@@ -31,17 +31,21 @@ where
     ID: Send + Sync + Eq + Hash + Clone,
     Entity: Send + Sync + Clone + HasId<ID>,
 {
-    async fn list(&self, list_parameters: ListParameters) -> Result<Vec<Entity>> {
+    async fn list(&self, list_parameters: ListParameters) -> Result<Page<Entity>> {
         let offset = (list_parameters.page_number.0 - 1) * list_parameters.page_size.0;
-        Ok(self
-            .store
-            .lock()
-            .await
-            .values()
-            .skip(offset)
-            .take(list_parameters.page_size.0)
-            .cloned()
-            .collect())
+        let collection = self.store.lock().await;
+        let key_value_pairs = collection.values();
+        let page = Page {
+            page_number: list_parameters.page_number,
+            page_size: list_parameters.page_size.clone(),
+            total_count: key_value_pairs.len(),
+            items: key_value_pairs
+                .skip(offset)
+                .take(list_parameters.page_size.0)
+                .cloned()
+                .collect(),
+        };
+        Ok(page)
     }
 
     async fn save(&self, entity: Entity) -> Result<()> {
@@ -143,16 +147,16 @@ mod tests {
                 .await
                 .expect("Failed to create entity");
         }
-        
+
         let list_parameters = ListParameters {
             page_number: PageNumber(1),
             page_size: PageSize(2),
         };
-        let entities = repository
+        let page = repository
             .list(list_parameters)
             .await
             .expect("Failed to create entity");
 
-        assert_eq!(entities.clone().len(), 2);
+        assert_eq!(page.items.clone().len(), 2);
     }
 }

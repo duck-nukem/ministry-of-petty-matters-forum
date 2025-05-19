@@ -380,3 +380,9 @@ a:not(.button):hover {
         display: none !important;
     }
 }
+
+.table-pagination-footer {
+    margin-top: 1rem;
+    display: flex;
+    justify-content: space-between;
+}

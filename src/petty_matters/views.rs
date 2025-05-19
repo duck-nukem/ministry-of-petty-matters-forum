@@ -10,12 +10,12 @@ use axum::routing::get;
 use axum::{Form, Router};
 use serde::Deserialize;
 use std::sync::Arc;
-use crate::persistence::repository::{ListParameters, PageNumber, PageSize};
+use crate::persistence::repository::{ListParameters, Page, PageNumber, PageSize};
 
 #[derive(Template)]
 #[template(path = "petty_matters/list.html")]
 pub struct PettyMattersList {
-    pub topics: Vec<Topic>,
+    pub topics: Page<Topic>,
 }
 
 #[derive(Template)]
@@ -55,7 +55,7 @@ async fn list_petty_matters(
     let template = PettyMattersList { topics }
         .render()
         .map_err(|_| StatusCode::INTERNAL_SERVER_ERROR)?;
-    Ok(Html(template))
+    Ok(cache_response(Html(template), Some(Seconds(60))))
 }
 
 async fn render_registration_form() -> Result<impl IntoResponse, StatusCode> {

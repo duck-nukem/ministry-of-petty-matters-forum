@@ -55,7 +55,7 @@ async fn list_petty_matters(
     let template = PettyMattersList { topics }
         .render()
         .map_err(|_| StatusCode::INTERNAL_SERVER_ERROR)?;
-    Ok(cache_response(Html(template), Some(Seconds(60))))
+    Ok(Html(template))
 }
 
 async fn render_registration_form() -> Result<impl IntoResponse, StatusCode> {

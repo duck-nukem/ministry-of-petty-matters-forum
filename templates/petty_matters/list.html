@@ -24,7 +24,7 @@
         {% for topic in topics %}
         <tr>
             <td><a href="/petty-matters/{{ topic.id }}" preload="mouseover">{{ topic.title }}</a></td>
-            <td data-utcdate="{{ topic.creation_time.to_rfc3339() }}"></td>
+            <td data-utcdate="{{ topic.creation_time.to_rfc3339() }}">{{ topic.creation_time.to_rfc3339() }}</td>
         </tr>
         {% endfor %}
         </tbody>

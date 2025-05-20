@@ -1,4 +1,4 @@
-name: Rust
+name: Deploy Docker Image
 
 on:
   push:
@@ -8,10 +8,11 @@ on:
 
 env:
   CARGO_TERM_COLOR: always
+  PUSH_IMAGE: true
 
 jobs:
   test:
-
+    name: Test
     runs-on: ubuntu-latest
 
     steps:
@@ -23,6 +24,7 @@ jobs:
 
   push_image:
     needs: test
+    name: Push Docker Image
     if: github.event_name == 'workflow_dispatch'
     runs-on: ubuntu-latest
 
@@ -39,5 +41,5 @@ jobs:
     - name: Build and push
       uses: docker/build-push-action@v6
       with:
-        push: true
+        push: {{env.PUSH_IMAGE == 'true' }}
         tags: registry.digitalocean.com/petty-matters/ministry:latest

@@ -25,7 +25,6 @@ jobs:
   push_image:
     needs: test
     name: Push Docker Image
-    if: github.event_name == 'workflow_dispatch'
     runs-on: ubuntu-latest
 
     steps:

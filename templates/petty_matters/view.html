@@ -5,4 +5,25 @@
 <section>
     <p>{{ topic.content }}</p>
 </section>
+
+<section class="comment-container">
+    <details class="comment-box">
+        <summary><h3>Add a comment</h3></summary>
+        <form method="POST" action="/petty-matters/{{topic.id}}/comments">
+            <label>
+                Your comment
+                <textarea name="content" rows="4" cols="50" placeholder="Leave a comment..."></textarea>
+            </label>
+            <button tabindex="0" type="submit">Press Enter to comment</button>
+        </form>
+    </details>
+
+    {% for comment in comments %}
+    <div>
+        <p><strong>Anonymous</strong> commented:</p>
+        <p>{{ comment.content }}</p>
+        <p><small>Posted on <span data-utcdate="{{ comment.creation_time.to_rfc3339() }}">{{ comment.creation_time.to_rfc3339() }}</span></small></p>
+    </div>
+    {% endfor %}
+</section>
 {% endblock %}

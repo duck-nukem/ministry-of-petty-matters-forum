@@ -34,15 +34,15 @@
     <div class="table-pagination-footer">
         {% if !topics.is_first_page() %}
         <a preload="mouseover"
-           href="/petty-matters?page={{ topics.page_number.0 - 1}}&page_size={{ topics.page_size.0}}">
-            <b><< Page {{ topics.page_number.0 - 1}}</b>
+           href="/petty-matters?page={{ topics.get_previous_page_number() }}&page_size={{ topics.size.0}}">
+            <b><< Page {{ topics.get_previous_page_number() }}</b>
         </a>
         {% endif %}
 
         {% if topics.has_next_page() %}
         <a preload="mouseover"
-           href="/petty-matters?page={{ topics.page_number.0 + 1}}&page_size={{ topics.page_size.0}}">
-            <b>Page {{ topics.page_number.0 + 1}} >></b>
+           href="/petty-matters?page={{ topics.get_next_page_number() }}&page_size={{ topics.size.0}}">
+            <b>Page {{ topics.get_next_page_number() }} >></b>
         </a>
     </div>
     {% endif %}

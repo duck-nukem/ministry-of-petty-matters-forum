@@ -1,5 +1,5 @@
 use crate::error::Result;
-use crate::persistence::repository::{ListParameters, Page, Repository};
+use crate::persistence::repository::{Filterable, ListParameters, Page, Repository};
 use async_trait::async_trait;
 use std::collections::HashMap;
 use std::hash::Hash;
@@ -29,17 +29,25 @@ pub trait HasId<ID> {
 impl<ID, Entity> Repository<ID, Entity> for InMemoryRepository<ID, Entity>
 where
     ID: Send + Sync + Eq + Hash + Clone,
-    Entity: Send + Sync + Clone + HasId<ID>,
+    Entity: Send + Sync + Clone + HasId<ID> + Filterable,
 {
+    #[allow(clippy::significant_drop_tightening)]
     async fn list(&self, list_parameters: ListParameters) -> Result<Page<Entity>> {
         let offset = (list_parameters.page_number.0 - 1) * list_parameters.page_size.0;
         let collection = self.store.lock().await;
         let key_value_pairs = collection.values();
         let page = Page {
-            page_number: list_parameters.page_number,
-            page_size: list_parameters.page_size.clone(),
+            current_page_number: list_parameters.page_number,
+            size: list_parameters.page_size.clone(),
             total_count: key_value_pairs.len(),
             items: key_value_pairs
+                .filter(|entity| {
+                    list_parameters.filters.as_ref().is_none_or(|filters| {
+                        filters.iter().all(|(key, val)| {
+                            entity.get_field_value(key).is_some_and(|v| v == *val)
+                        })
+                    })
+                })
                 .skip(offset)
                 .take(list_parameters.page_size.0)
                 .cloned()
@@ -66,7 +74,9 @@ where
 #[cfg(test)]
 mod tests {
     use crate::persistence::in_memory_repository::{HasId, InMemoryRepository};
-    use crate::persistence::repository::{ListParameters, PageNumber, PageSize, Repository};
+    use crate::persistence::repository::{
+        Filterable, ListParameters, PageNumber, PageSize, Repository,
+    };
 
     type StubId = i32;
 
@@ -84,6 +94,12 @@ mod tests {
     impl HasId<StubId> for StubEntity {
         fn id(&self) -> StubId {
             self.id
+        }
+    }
+
+    impl Filterable for StubEntity {
+        fn get_field_value(&self, _field: &str) -> Option<String> {
+            None
         }
     }
 
@@ -151,6 +167,7 @@ mod tests {
         let list_parameters = ListParameters {
             page_number: PageNumber(1),
             page_size: PageSize(2),
+            filters: None,
         };
         let page = repository
             .list(list_parameters)

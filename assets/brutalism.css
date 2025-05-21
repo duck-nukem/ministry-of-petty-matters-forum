@@ -386,3 +386,13 @@ a:not(.button):hover {
     display: flex;
     justify-content: space-between;
 }
+
+.comment-container {
+    margin-top: 1rem;
+}
+
+.comment-box {
+    cursor: pointer;
+    margin-top: 1rem;
+    margin-bottom: 1rem;
+}

@@ -1,16 +1,18 @@
+use std::collections::HashMap;
 use crate::petty_matters::service::TopicService;
-use crate::petty_matters::topic::entity::{Topic, TopicId};
+use crate::petty_matters::topic::{Topic, TopicId};
 use crate::time::Seconds;
 use crate::view::cache_response;
 use askama::Template;
 use axum::extract::{Path, Query, State};
 use axum::http::StatusCode;
 use axum::response::{Html, IntoResponse, Redirect};
-use axum::routing::get;
+use axum::routing::{get, post};
 use axum::{Form, Router};
 use serde::Deserialize;
 use std::sync::Arc;
 use crate::persistence::repository::{ListParameters, Page, PageNumber, PageSize};
+use crate::petty_matters::comment::Comment;
 
 #[derive(Template)]
 #[template(path = "petty_matters/list.html")]
@@ -26,11 +28,17 @@ pub struct PettyMattersRegistration {}
 #[template(path = "petty_matters/view.html")]
 pub struct PettyMatter {
     pub topic: Topic,
+    pub comments: Vec<Comment>
 }
 
 #[derive(Deserialize)]
 struct PettyMattersRegistrationForm {
     subject: String,
+    content: String,
+}
+
+#[derive(Deserialize)]
+struct CommentForm {
     content: String,
 }
 
@@ -47,6 +55,7 @@ async fn list_petty_matters(
     let list_parameters = ListParameters {
         page_number: pagination.page.clone().unwrap_or(PageNumber(1)),
         page_size: pagination.page_size.clone().unwrap_or(PageSize(10)),
+        filters: None,
     };
     let topics = service
         .list_topics(list_parameters)
@@ -86,10 +95,31 @@ async fn view_petty_matter(
         .await
         .map_err(|_| StatusCode::INTERNAL_SERVER_ERROR)?
         .ok_or(StatusCode::NOT_FOUND)?;
-    let template = PettyMatter { topic }
+    let comments = service.list_comments(&topic_id, ListParameters {
+        page_size: PageSize(1000),
+        page_number: PageNumber(1),
+        filters:  Some(HashMap::from([
+            ("topic_id".to_string(), topic_id.to_string()),
+        ])),
+    })
+        .await
+        .map_err(|_| StatusCode::INTERNAL_SERVER_ERROR)?;
+    let template = PettyMatter { topic, comments: comments.items }
         .render()
         .map_err(|_| StatusCode::INTERNAL_SERVER_ERROR)?;
     Ok(cache_response(Html(template), Some(Seconds(60))))
+}
+
+async fn add_comment(
+    Path(topic_id): Path<TopicId>,
+    State(service): State<Arc<TopicService>>,
+    form: Form<CommentForm>,
+) -> Result<impl IntoResponse, StatusCode> {
+    service
+        .reply_to_topic(&topic_id, form.content.clone())
+        .await
+        .map_err(|_| StatusCode::INTERNAL_SERVER_ERROR)?;
+    Ok(Redirect::to(&format!("/petty-matters/{topic_id}")))
 }
 
 pub fn topics_router(service: Arc<TopicService>) -> Router {
@@ -97,5 +127,6 @@ pub fn topics_router(service: Arc<TopicService>) -> Router {
         .route("/", get(list_petty_matters).post(register_petty_matter))
         .route("/register", get(render_registration_form))
         .route("/{topic_id}", get(view_petty_matter))
+        .route("/{topic_id}/comments", post(add_comment))
         .with_state(service)
 }

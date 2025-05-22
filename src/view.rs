@@ -1,17 +1,84 @@
 use crate::time::Seconds;
-use axum::http::header;
-use axum::response::IntoResponse;
+use askama::Template;
+use axum::http::{header, StatusCode};
+use axum::response::{Html, IntoResponse, Response};
 
-pub fn cache_response(
-    original_response: impl IntoResponse,
-    max_age: Option<Seconds>,
-) -> impl IntoResponse {
-    let mut response = original_response.into_response();
-    let max_age_header_value = format!("max-age={}", max_age.unwrap_or(Seconds(60)).0);
-    response.headers_mut().insert(
-        header::CACHE_CONTROL,
-        header::HeaderValue::from_str(&max_age_header_value)
-            .unwrap_or(header::HeaderValue::from_static("max-age=60")),
-    );
-    response
+pub struct HtmlResponse {
+    pub response: Html<String>,
+    pub status_code: Option<StatusCode>,
+    pub max_age: Option<Seconds>,
+}
+
+impl HtmlResponse {
+    pub const fn from_string(response: String) -> Self {
+        Self {
+            response: Html(response),
+            status_code: Some(StatusCode::OK),
+            max_age: None,
+        }
+    }
+    
+    pub const fn cached(response: String, cache_for: Seconds) -> Self {
+        Self {
+            response: Html(response),
+            status_code: Some(StatusCode::OK),
+            max_age: Some(cache_for),
+        }
+    }
+}
+
+impl IntoResponse for HtmlResponse {
+    fn into_response(self) -> Response {
+        let response_with_status = match self.status_code {
+            Some(status_code) => (status_code, self.response),
+            None => (StatusCode::OK, self.response),
+        };
+        let mut res = response_with_status.into_response();
+        if let Some(seconds) = self.max_age {
+            res.headers_mut().insert(
+                header::CACHE_CONTROL,
+                header::HeaderValue::from_str(&format!("max-age={}", seconds.0))
+                    .unwrap_or(header::HeaderValue::from_static("max-age=60")),
+            );
+        }
+        res
+    }
+}
+
+#[macro_export]
+macro_rules! render_template {
+    ($template:expr) => {
+        match $template.render() {
+            Ok(t) => t,
+            Err(_) => return show_error_page(),
+        }
+    };
+}
+
+#[derive(Template)]
+#[template(path = "errors/5xx.html")]
+pub struct InternalServerErrorPage {}
+
+#[derive(Template)]
+#[template(path = "errors/404.html")]
+pub struct NotFoundErrorPage {}
+
+pub fn show_error_page() -> Result<HtmlResponse, StatusCode> {
+    let response = render_template!(InternalServerErrorPage {});
+
+    Ok(HtmlResponse {
+        response: Html(response),
+        status_code: Some(StatusCode::INTERNAL_SERVER_ERROR),
+        max_age: None,
+    })
+}
+
+pub fn show_not_found_page() -> Result<HtmlResponse, StatusCode> {
+    let response = render_template!(NotFoundErrorPage {});
+
+    Ok(HtmlResponse {
+        response: Html(response),
+        status_code: Some(StatusCode::NOT_FOUND),
+        max_age: Some(Seconds(60)),
+    })
 }

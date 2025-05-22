@@ -5,7 +5,7 @@ use serde::Deserialize;
 use uuid::Uuid;
 use crate::persistence::repository::Filterable;
 
-#[derive(Clone, Deserialize, Eq, PartialEq, Hash)]
+#[derive(Clone, Debug, Deserialize, Eq, PartialEq, Hash)]
 pub struct TopicId(pub Uuid);
 
 impl Display for TopicId {
@@ -14,7 +14,7 @@ impl Display for TopicId {
     }
 }
 
-#[derive(Clone, Eq, PartialEq)]
+#[derive(Clone, Debug, Eq, PartialEq)]
 pub struct Topic {
     pub id: TopicId,
     pub title: String,

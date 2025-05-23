@@ -396,3 +396,13 @@ a:not(.button):hover {
     margin-top: 1rem;
     margin-bottom: 1rem;
 }
+
+.post-page-title {
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.breadcrumbs {
+    font-weight: 400;
+    font-family: var(--body-font);
+}

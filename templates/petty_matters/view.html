@@ -1,8 +1,9 @@
 {% extends "base.html" %}
 {% block title %}{{topic.title}}{% endblock %}
 {% block content %}
-<h1>{{ topic.title }}</h1>
+<h1 class="post-page-title">{{ topic.title }}</h1>
 <section>
+    <h5 class="breadcrumbs"><a href="/petty-matters">Petty Matters</a> / {{ topic.title }}</h5>
     <p>{{ topic.content }}</p>
 </section>
 

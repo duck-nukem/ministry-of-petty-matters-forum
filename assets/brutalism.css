@@ -395,6 +395,10 @@ a:not(.button):hover {
     cursor: pointer;
     margin-top: 1rem;
     margin-bottom: 1rem;
+
+    h3 {
+        display: inline-block;
+    }
 }
 
 .post-page-title {

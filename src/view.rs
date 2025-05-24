@@ -1,3 +1,4 @@
+use crate::error::AnyError;
 use crate::time::Seconds;
 use askama::Template;
 use axum::http::{header, StatusCode};
@@ -17,7 +18,7 @@ impl HtmlResponse {
             max_age: None,
         }
     }
-    
+
     pub const fn cached(response: String, cache_for: Seconds) -> Self {
         Self {
             response: Html(response),
@@ -50,7 +51,7 @@ macro_rules! render_template {
     ($template:expr) => {
         match $template.render() {
             Ok(t) => t,
-            Err(_) => return show_error_page(),
+            Err(e) => return show_error_page(Box::new(e)),
         }
     };
 }
@@ -63,7 +64,11 @@ pub struct InternalServerErrorPage {}
 #[template(path = "errors/404.html")]
 pub struct NotFoundErrorPage {}
 
-pub fn show_error_page() -> Result<HtmlResponse, StatusCode> {
+pub fn show_error_page<E>(error: E) -> Result<HtmlResponse, StatusCode>
+where
+    E: Into<AnyError>,
+{
+    notify_maintainers_on_error(&error.into());
     let response = render_template!(InternalServerErrorPage {});
 
     Ok(HtmlResponse {
@@ -71,6 +76,10 @@ pub fn show_error_page() -> Result<HtmlResponse, StatusCode> {
         status_code: Some(StatusCode::INTERNAL_SERVER_ERROR),
         max_age: None,
     })
+}
+
+fn notify_maintainers_on_error(error: &AnyError) {
+    println!("Error occurred: {error}");
 }
 
 pub fn show_not_found_page() -> Result<HtmlResponse, StatusCode> {

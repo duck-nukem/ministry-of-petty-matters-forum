@@ -1,0 +1,28 @@
+{% extends "base.html" %}
+{% block head %}
+<!--<meta http-equiv="Content-Security-Policy" content="script-src https://accounts.google.com/gsi/client; frame-src https://accounts.google.com/gsi/; connect-src https://accounts.google.com/gsi/;">-->
+<script src="https://accounts.google.com/gsi/client" async></script>
+{% endblock %}
+
+{% block title %}Login{% endblock %}
+
+{% block content %}
+<script>
+    function handleCredentialResponse(response) {
+        console.log(response)
+        fetch('/auth/callback', {
+            method: 'POST',
+            body: JSON.stringify({ credential: response.credential }),
+            headers: { 'Content-Type': 'application/json' },
+        });
+    }
+</script>
+<section>
+    <div
+            id="g_id_onload"
+            data-client_id="344287748721-uvjlsv8iul7a2f40eviipeknj4tpaea3.apps.googleusercontent.com"
+            data-native_login_uri="http://localhost:8000/auth/callback"
+            data-callback="handleCredentialResponse"
+    ></div>
+</section>
+{% endblock %}

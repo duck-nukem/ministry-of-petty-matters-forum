@@ -38,7 +38,7 @@ where
         let key_value_pairs = collection.values();
         let page = Page {
             current_page_number: list_parameters.page_number,
-            size: list_parameters.page_size.clone(),
+            size: list_parameters.page_size,
             total_count: key_value_pairs.len(),
             items: key_value_pairs
                 .filter(|entity| {

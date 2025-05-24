@@ -58,8 +58,9 @@ async fn list_petty_matters(
         page_size: pagination.page_size.unwrap_or(PageSize(10)),
         filters: None,
     };
-    let Ok(topics) = service.list_topics(list_parameters).await else {
-        return show_error_page();
+    let topics = match service.list_topics(list_parameters).await {
+        Ok(topics) => topics,
+        Err(e) => return show_error_page(e),
     };
     let template = render_template!(PettyMattersList { topics });
     Ok(HtmlResponse::from_string(template))
@@ -89,7 +90,7 @@ async fn view_petty_matter(
     let topic = match service.get_topic(&topic_id).await {
         Ok(Some(t)) => t,
         Ok(None) => return show_not_found_page(),
-        Err(_) => return show_error_page(),
+        Err(e) => return show_error_page(e),
     };
     let comment_filters = ListParameters {
         page_size: PageSize(1000),
@@ -99,8 +100,9 @@ async fn view_petty_matter(
             topic_id.to_string(),
         )])),
     };
-    let Ok(comments) = service.list_comments(&topic_id, comment_filters).await else {
-        return show_error_page();
+    let comments = match service.list_comments(&topic_id, comment_filters).await {
+        Ok(c) => c,
+        Err(e) => return show_error_page(e),
     };
     let template = render_template!(PettyMatter {
         topic,

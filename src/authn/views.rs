@@ -1,4 +1,3 @@
-use crate::authn::oauth::{validate_token, OAuthProvider};
 use crate::render_template;
 use crate::view::show_error_page;
 use crate::view::HtmlResponse;
@@ -7,6 +6,8 @@ use axum::http::StatusCode;
 use axum::routing::{get, post};
 use axum::{Json, Router};
 use serde::{Deserialize, Serialize};
+use crate::authn::oauth::config::OAuthProvider;
+use crate::authn::oauth::token::validate_token;
 
 #[derive(Template)]
 #[template(path = "authn/login.html")]

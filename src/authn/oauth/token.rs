@@ -1,32 +1,9 @@
+use crate::authn::oauth::config::{OAuthConfig, OAuthProvider};
+use crate::authn::oauth::errors::TokenValidationError;
 use jsonwebtoken::{decode, decode_header, Algorithm, DecodingKey, Validation};
 use reqwest::Client;
 use serde::Deserialize;
 use std::collections::HashSet;
-use std::error::Error;
-use std::fmt;
-use std::fmt::Display;
-
-pub static GOOGLE_OAUTH_CLIENT_ID: &str =
-    "344287748721-uvjlsv8iul7a2f40eviipeknj4tpaea3.apps.googleusercontent.com";
-static GOOGLE_OAUTH_CERTS_URL: &str = "https://www.googleapis.com/oauth2/v3/certs";
-static GOOGLE_OAUTH_ISSUER: &str = "https://accounts.google.com";
-
-#[derive(Debug)]
-pub enum TokenValidationError {
-    InvalidHeader,
-    MissingKid,
-    KeyNotFound,
-    InvalidKey,
-    TokenDecode,
-}
-
-impl Display for TokenValidationError {
-    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        write!(f, "OAuth Token Validation failed ~> {self:?}")
-    }
-}
-
-impl Error for TokenValidationError {}
 
 #[derive(Debug, Deserialize)]
 struct Jwk {
@@ -41,7 +18,7 @@ struct Jwks {
     keys: Vec<Jwk>,
 }
 
-async fn fetch_google_jwks(certs_url: &str) -> Jwks {
+async fn fetch_jwks(certs_url: &str) -> Jwks {
     let Ok(response) = Client::new().get(certs_url).send().await else {
         return Jwks { keys: vec![] };
     };
@@ -70,30 +47,6 @@ pub struct Claims {
     email: Option<String>,
 }
 
-pub enum OAuthProvider {
-    Google,
-}
-
-struct OAuthConfig<'a> {
-    provider: OAuthProvider,
-    client_id: &'a str,
-    issuer: &'a str,
-    certs_url: &'a str,
-}
-
-impl OAuthConfig<'_> {
-    pub fn for_provider(provider: OAuthProvider) -> Self {
-        match provider {
-            OAuthProvider::Google => OAuthConfig {
-                provider,
-                client_id: GOOGLE_OAUTH_CLIENT_ID,
-                issuer: GOOGLE_OAUTH_ISSUER,
-                certs_url: GOOGLE_OAUTH_CERTS_URL,
-            },
-        }
-    }
-}
-
 pub async fn validate_token(
     token: &str,
     provider: OAuthProvider,
@@ -101,7 +54,7 @@ pub async fn validate_token(
     let oauth_config = OAuthConfig::for_provider(provider);
     let header = decode_header(token).map_err(|_| TokenValidationError::InvalidHeader)?;
     let kid = header.kid.ok_or(TokenValidationError::MissingKid)?;
-    let jwks = fetch_google_jwks(oauth_config.certs_url).await;
+    let jwks = fetch_jwks(oauth_config.certs_url).await;
     let jwk = find_key(&jwks, &kid).ok_or(TokenValidationError::KeyNotFound)?;
     let key = decoding_key(jwk).map_err(|_| TokenValidationError::InvalidKey)?;
 

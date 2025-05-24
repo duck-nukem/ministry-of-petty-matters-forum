@@ -1,2 +1,2 @@
 pub mod views;
-mod oauth;
+pub mod oauth;

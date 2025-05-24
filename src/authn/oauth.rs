@@ -74,26 +74,40 @@ pub enum OAuthProvider {
     Google,
 }
 
+struct OAuthConfig<'a> {
+    provider: OAuthProvider,
+    client_id: &'a str,
+    issuer: &'a str,
+    certs_url: &'a str,
+}
+
+impl OAuthConfig<'_> {
+    pub fn for_provider(provider: OAuthProvider) -> Self {
+        match provider {
+            OAuthProvider::Google => OAuthConfig {
+                provider,
+                client_id: GOOGLE_OAUTH_CLIENT_ID,
+                issuer: GOOGLE_OAUTH_ISSUER,
+                certs_url: GOOGLE_OAUTH_CERTS_URL,
+            },
+        }
+    }
+}
+
 pub async fn validate_token(
     token: &str,
     provider: OAuthProvider,
 ) -> Result<Claims, TokenValidationError> {
-    let (issuer, client_id, certs_url) = match provider {
-        OAuthProvider::Google => (
-            GOOGLE_OAUTH_ISSUER,
-            GOOGLE_OAUTH_CLIENT_ID,
-            GOOGLE_OAUTH_CERTS_URL,
-        ),
-    };
+    let oauth_config = OAuthConfig::for_provider(provider);
     let header = decode_header(token).map_err(|_| TokenValidationError::InvalidHeader)?;
     let kid = header.kid.ok_or(TokenValidationError::MissingKid)?;
-    let jwks = fetch_google_jwks(certs_url).await;
+    let jwks = fetch_google_jwks(oauth_config.certs_url).await;
     let jwk = find_key(&jwks, &kid).ok_or(TokenValidationError::KeyNotFound)?;
     let key = decoding_key(jwk).map_err(|_| TokenValidationError::InvalidKey)?;
 
     let mut validation = Validation::new(Algorithm::RS256);
-    validation.set_audience(&[client_id]);
-    validation.iss = Some(HashSet::from([issuer.to_string()]));
+    validation.set_audience(&[oauth_config.client_id]);
+    validation.iss = Some(HashSet::from([oauth_config.issuer.to_string()]));
 
     let token_data = decode::<Claims>(token, &key, &validation)
         .map_err(|_| TokenValidationError::TokenDecode)?;

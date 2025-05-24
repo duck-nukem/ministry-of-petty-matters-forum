@@ -4,10 +4,10 @@ use async_trait::async_trait;
 use serde::Deserialize;
 use crate::persistence::in_memory_repository::HasId;
 
-#[derive(Clone, Default, Deserialize, Eq, PartialEq)]
+#[derive(Clone, Copy, Default, Deserialize, Eq, PartialEq)]
 pub struct PageNumber(pub usize);
 
-#[derive(Clone, Default, Deserialize)]
+#[derive(Clone, Copy, Default, Deserialize)]
 pub struct PageSize(pub usize);
 
 pub struct ListParameters {

@@ -54,8 +54,8 @@ async fn list_petty_matters(
     pagination: Query<Pagination>,
 ) -> Result<HtmlResponse, StatusCode> {
     let list_parameters = ListParameters {
-        page_number: pagination.page.clone().unwrap_or(PageNumber(1)),
-        page_size: pagination.page_size.clone().unwrap_or(PageSize(10)),
+        page_number: pagination.page.unwrap_or(PageNumber(1)),
+        page_size: pagination.page_size.unwrap_or(PageSize(10)),
         filters: None,
     };
     let Ok(topics) = service.list_topics(list_parameters).await else {

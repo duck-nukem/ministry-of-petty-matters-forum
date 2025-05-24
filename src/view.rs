@@ -78,7 +78,7 @@ where
     })
 }
 
-fn notify_maintainers_on_error(error: &AnyError) {
+pub fn notify_maintainers_on_error(error: &AnyError) {
     println!("Error occurred: {error}");
 }
 

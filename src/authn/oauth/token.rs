@@ -42,9 +42,9 @@ fn decoding_key(jwk: &Jwk) -> jsonwebtoken::errors::Result<DecodingKey> {
 pub struct Claims {
     sub: String,
     aud: String,
-    exp: usize,
     iss: String,
-    email: Option<String>,
+    pub(crate) exp: usize,
+    pub(crate) email: Option<String>,
 }
 
 pub async fn validate_token(

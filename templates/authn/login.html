@@ -7,22 +7,12 @@
 {% block title %}Login{% endblock %}
 
 {% block content %}
-<script>
-    function handleCredentialResponse(response) {
-        console.log(response)
-        fetch('/auth/callback', {
-            method: 'POST',
-            body: JSON.stringify({ credential: response.credential }),
-            headers: { 'Content-Type': 'application/json' },
-        });
-    }
-</script>
 <section>
     <div
             id="g_id_onload"
             data-client_id="344287748721-uvjlsv8iul7a2f40eviipeknj4tpaea3.apps.googleusercontent.com"
-            data-native_login_uri="http://localhost:8000/auth/callback"
-            data-callback="handleCredentialResponse"
+            data-login_uri="/auth/callback"
+            data-ux_mode="redirect"
     ></div>
 </section>
 {% endblock %}

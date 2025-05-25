@@ -1,3 +1,5 @@
+use crate::authn::views::auth_router;
+use crate::config::APP_CONFIG;
 use crate::persistence::in_memory_repository::InMemoryRepository;
 use crate::petty_matters::views::topics_router;
 use askama::Template;
@@ -6,14 +8,14 @@ use axum::{routing::get, Router};
 use petty_matters::service::TopicService;
 use std::sync::Arc;
 use tower_http::services::ServeDir;
-use crate::authn::views::auth_router;
 
+mod authn;
+mod config;
 mod error;
 mod persistence;
 mod petty_matters;
 mod time;
 mod view;
-mod authn;
 
 #[derive(Template)]
 #[template(path = "errors/404.html")]
@@ -33,10 +35,11 @@ async fn main() {
         .nest("/auth", auth_router())
         .nest(MAIN_ENTRY_POINT, topics_router(topic_service))
         .nest_service("/assets", ServeDir::new("assets"));
-    let listener = tokio::net::TcpListener::bind("0.0.0.0:3000")
-        .await
-        .expect("Field to start the server, maybe the port is already in use");
+    let address = APP_CONFIG.get_address();
+    let listener = tokio::net::TcpListener::bind(&address)
+    .await
+    .expect(format!("Failed to listen on {address}, maybe the port is already in use?").as_str());
     axum::serve(listener, app)
         .await
-        .expect("Failed to start the server. This sucks!");
+        .expect("Failed to start the server (x_x')");
 }

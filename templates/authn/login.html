@@ -1,7 +1,6 @@
 {% extends "base.html" %}
 {% block head %}
-<!--<meta http-equiv="Content-Security-Policy" content="script-src https://accounts.google.com/gsi/client; frame-src https://accounts.google.com/gsi/; connect-src https://accounts.google.com/gsi/;">-->
-<script src="https://accounts.google.com/gsi/client" async></script>
+<script nonce="{{nonce}}" src="https://accounts.google.com/gsi/client" async></script>
 {% endblock %}
 
 {% block title %}Login{% endblock %}

@@ -2,7 +2,6 @@ use crate::authn::views::auth_router;
 use crate::config::APP_CONFIG;
 use crate::persistence::in_memory_repository::InMemoryRepository;
 use crate::petty_matters::views::topics_router;
-use askama::Template;
 use axum::response::Redirect;
 use axum::{routing::get, Router};
 use petty_matters::service::TopicService;
@@ -14,12 +13,9 @@ mod config;
 mod error;
 mod persistence;
 mod petty_matters;
+mod templates;
 mod time;
 mod view;
-
-#[derive(Template)]
-#[template(path = "errors/404.html")]
-pub struct NotFoundPage {}
 
 static MAIN_ENTRY_POINT: &str = "/petty-matters";
 
@@ -37,8 +33,8 @@ async fn main() {
         .nest_service("/assets", ServeDir::new("assets"));
     let address = APP_CONFIG.get_address();
     let listener = tokio::net::TcpListener::bind(&address)
-    .await
-    .expect("Failed to bind listener on host & port, maybe the port is already in use?");
+        .await
+        .expect("Failed to bind listener on host & port, maybe the port is already in use?");
     axum::serve(listener, app)
         .await
         .expect("Failed to start the server (x_x')");

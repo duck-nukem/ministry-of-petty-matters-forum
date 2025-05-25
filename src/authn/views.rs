@@ -13,16 +13,18 @@ use axum::routing::{get, post};
 use axum::{Form, Router};
 use serde::{Deserialize, Serialize};
 use crate::config::APP_CONFIG;
+use crate::templates::Nonce;
 
 #[derive(Template)]
 #[template(path = "authn/login.html")]
 pub struct LoginPage {
     root: String,
     user: User,
+    nonce: Nonce,
 }
 
-async fn render_login_view(user: User) -> Result<HtmlResponse, StatusCode> {
-    let template = render_template!(LoginPage {root: APP_CONFIG.public_root_url.clone(), user});
+async fn render_login_view(nonce: Nonce, user: User) -> Result<HtmlResponse, StatusCode> {
+    let template = render_template!(LoginPage {root: APP_CONFIG.public_root_url.clone(), nonce, user});
     Ok(HtmlResponse::from_string(template))
 }
 

@@ -4,7 +4,7 @@
 <h1 class="post-page-title">{{ topic.title }}</h1>
 <section>
     <h5 class="breadcrumbs"><a href="/petty-matters">Petty Matters</a> / {{ topic.title }}</h5>
-    <p>{{ topic.content }}</p>
+    <p>{{ topic.content | markdown | safe }}</p>
 </section>
 
 <section class="comment-container">
@@ -22,7 +22,7 @@
     {% for comment in comments %}
     <div>
         <p><strong>Anonymous</strong> commented:</p>
-        <p>{{ comment.content }}</p>
+        <p>{{ comment.content | markdown | safe }}</p>
         <p><small>Posted on <span data-utcdate="{{ comment.creation_time.to_rfc3339() }}">{{ comment.creation_time.to_rfc3339() }}</span></small></p>
     </div>
     {% endfor %}

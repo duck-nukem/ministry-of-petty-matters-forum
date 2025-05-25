@@ -1,3 +1,4 @@
+use crate::templates::{filters, Nonce};
 use crate::persistence::repository::{ListParameters, Page, PageNumber, PageSize};
 use crate::petty_matters::comment::Comment;
 use crate::petty_matters::service::TopicService;
@@ -20,6 +21,7 @@ use crate::render_template;
 #[template(path = "petty_matters/list.html")]
 pub struct PettyMattersList {
     user: User,
+    nonce: Nonce,
     pub topics: Page<Topic>,
 }
 
@@ -27,11 +29,13 @@ pub struct PettyMattersList {
 #[template(path = "petty_matters/add.html")]
 pub struct PettyMattersRegistration {
     user: User,
+    nonce: Nonce,
 }
 
 #[derive(Template)]
 #[template(path = "petty_matters/view.html")]
 pub struct PettyMatter {
+    nonce: Nonce,
     pub topic: Topic,
     pub comments: Vec<Comment>,
 }
@@ -55,6 +59,7 @@ struct Pagination {
 
 async fn list_petty_matters(
     user: User,
+    nonce: Nonce,
     State(service): State<Arc<TopicService>>,
     pagination: Query<Pagination>,
 ) -> Result<HtmlResponse, StatusCode> {
@@ -67,12 +72,12 @@ async fn list_petty_matters(
         Ok(topics) => topics,
         Err(e) => return show_error_page(e),
     };
-    let template = render_template!(PettyMattersList { user, topics });
+    let template = render_template!(PettyMattersList { nonce, user, topics });
     Ok(HtmlResponse::from_string(template))
 }
 
-async fn render_registration_form(user: User) -> Result<HtmlResponse, StatusCode> {
-    let template = render_template!(PettyMattersRegistration { user });
+async fn render_registration_form(nonce: Nonce, user: User) -> Result<HtmlResponse, StatusCode> {
+    let template = render_template!(PettyMattersRegistration { nonce, user });
     Ok(HtmlResponse::from_string(template))
 }
 
@@ -90,6 +95,7 @@ async fn register_petty_matter(
 }
 
 async fn view_petty_matter(
+    nonce: Nonce,
     Path(topic_id): Path<TopicId>,
     State(service): State<Arc<TopicService>>,
 ) -> Result<HtmlResponse, StatusCode> {
@@ -111,6 +117,7 @@ async fn view_petty_matter(
         Err(e) => return show_error_page(e),
     };
     let template = render_template!(PettyMatter {
+        nonce,
         topic,
         comments: comments.items,
     });

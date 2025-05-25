@@ -3,6 +3,7 @@ use crate::time::Seconds;
 use askama::Template;
 use axum::http::{header, StatusCode};
 use axum::response::{Html, IntoResponse, Response};
+use crate::templates::Nonce;
 
 pub struct HtmlResponse {
     pub response: Html<String>,
@@ -58,18 +59,22 @@ macro_rules! render_template {
 
 #[derive(Template)]
 #[template(path = "errors/5xx.html")]
-pub struct InternalServerErrorPage {}
+pub struct InternalServerErrorPage {
+    nonce: Nonce,
+}
 
 #[derive(Template)]
 #[template(path = "errors/404.html")]
-pub struct NotFoundErrorPage {}
+pub struct NotFoundErrorPage {
+    nonce: Nonce,
+}
 
 pub fn show_error_page<E>(error: E) -> Result<HtmlResponse, StatusCode>
 where
     E: Into<AnyError>,
 {
     notify_maintainers_on_error(&error.into());
-    let response = render_template!(InternalServerErrorPage {});
+    let response = render_template!(InternalServerErrorPage { nonce: Nonce::new() });
 
     Ok(HtmlResponse {
         response: Html(response),
@@ -83,7 +88,7 @@ pub fn notify_maintainers_on_error(error: &AnyError) {
 }
 
 pub fn show_not_found_page() -> Result<HtmlResponse, StatusCode> {
-    let response = render_template!(NotFoundErrorPage {});
+    let response = render_template!(NotFoundErrorPage { nonce: Nonce::new() });
 
     Ok(HtmlResponse {
         response: Html(response),

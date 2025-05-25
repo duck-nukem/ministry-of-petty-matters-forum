@@ -1,5 +1,6 @@
 use crate::config::APP_CONFIG;
 use crate::error::Result;
+use crate::time::{Days, Seconds, TimeUnit};
 use jsonwebtoken::{decode, encode, Algorithm, DecodingKey, EncodingKey, Header, Validation};
 use serde::{Deserialize, Serialize};
 use std::fmt::Display;
@@ -14,6 +15,9 @@ static ENCODING_KEY: LazyLock<EncodingKey> = LazyLock::new(|| {
 #[allow(clippy::expect_used)]
 static DECODING_KEY: LazyLock<DecodingKey> = LazyLock::new(|| {
     DecodingKey::from_base64_secret(&APP_CONFIG.secret).expect("Failed to create decoding key")
+});
+static TOKEN_LIFETIME: LazyLock<Seconds> = LazyLock::new(|| {
+    Days(14).to_seconds()
 });
 
 #[derive(Clone, Debug, Eq, PartialEq, Serialize, Deserialize)]
@@ -33,8 +37,8 @@ impl Display for Username {
 
 #[derive(Debug, Serialize, Deserialize)]
 pub struct User {
-    pub email: Username,  // name mustn't change; must overlap with a "Claim"
-    pub exp: usize,  // name mustn't change; must overlap with a "Claim"
+    pub email: Username, // name mustn't change; must overlap with a "Claim"
+    pub exp: usize,      // name mustn't change; must overlap with a "Claim"
     pub is_anonymous: bool,
 }
 
@@ -51,8 +55,11 @@ impl Display for User {
 impl User {
     pub fn into_cookie(self) -> Result<String> {
         let token = encode_user_data(&self)?;
+        let lifetime = TOKEN_LIFETIME.to_string();
         Ok(format!(
-            "{SESSION_COOKIE_NAME}={token}; Max-Age=3600; Path=/; HttpOnly; SameSite=Lax"
+            "{SESSION_COOKIE_NAME}={token}; \
+            Max-Age={lifetime}; Path=/; \
+            HttpOnly; SameSite=Lax"
         ))
     }
 

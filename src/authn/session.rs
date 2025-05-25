@@ -43,7 +43,7 @@ impl Display for User {
         write!(
             f,
             "User(email: {}, is_anonymous: {})",
-            self.email.0, self.is_anonymous
+            self.email, self.is_anonymous
         )
     }
 }

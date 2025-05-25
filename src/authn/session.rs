@@ -2,6 +2,7 @@ use crate::config::APP_CONFIG;
 use crate::error::Result;
 use jsonwebtoken::{decode, encode, Algorithm, DecodingKey, EncodingKey, Header, Validation};
 use serde::{Deserialize, Serialize};
+use std::fmt::Display;
 use std::sync::LazyLock;
 
 pub static SESSION_COOKIE_NAME: &str = "session";
@@ -17,16 +18,43 @@ static DECODING_KEY: LazyLock<DecodingKey> = LazyLock::new(|| {
 
 #[derive(Debug, Serialize, Deserialize)]
 pub struct User {
-    pub email: String,
-    pub expires_at: usize,
+    pub email: String,  // name mustn't change; must overlap with a "Claim"
+    pub exp: usize,  // name mustn't change; must overlap with a "Claim"
+    pub is_anonymous: bool,
+}
+
+impl Display for User {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        write!(
+            f,
+            "User(email: {}, is_anonymous: {})",
+            self.email, self.is_anonymous
+        )
+    }
 }
 
 impl User {
     pub fn into_cookie(self) -> Result<String> {
-        let user_data = encode_user_data(&self)?;
+        let token = encode_user_data(&self)?;
         Ok(format!(
-            "{SESSION_COOKIE_NAME}={user_data}; Max-Age=3600; HttpOnly; Secure; SameSite=Strict"
+            "{SESSION_COOKIE_NAME}={token}; Max-Age=3600; Path=/; HttpOnly; SameSite=Lax"
         ))
+    }
+
+    pub const fn new(email: String, expires_at: usize) -> Self {
+        Self {
+            email,
+            exp: expires_at,
+            is_anonymous: false,
+        }
+    }
+
+    pub fn anonymous() -> Self {
+        Self {
+            email: "anonymous@localhost".to_string(),
+            exp: 0,
+            is_anonymous: true,
+        }
     }
 }
 

@@ -13,6 +13,7 @@ use axum::{Form, Router};
 use serde::Deserialize;
 use std::collections::HashMap;
 use std::sync::Arc;
+use crate::authn::session::User;
 use crate::render_template;
 
 #[derive(Template)]

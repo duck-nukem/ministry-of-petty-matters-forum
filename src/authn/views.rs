@@ -12,13 +12,16 @@ use axum::response::{IntoResponse, Redirect, Response};
 use axum::routing::{get, post};
 use axum::{Form, Router};
 use serde::{Deserialize, Serialize};
+use crate::config::APP_CONFIG;
 
 #[derive(Template)]
 #[template(path = "authn/login.html")]
-pub struct LoginPage {}
+pub struct LoginPage {
+    root: String
+}
 
 async fn render_login_view() -> Result<HtmlResponse, StatusCode> {
-    let template = render_template!(LoginPage {});
+    let template = render_template!(LoginPage {root: APP_CONFIG.get_root_url()});
     Ok(HtmlResponse::from_string(template))
 }
 
@@ -38,14 +41,11 @@ async fn oauth_callback(Form(body): Form<OauthResponse>) -> Response {
     let Some(email) = claims.email else {
         return handle_authentication_failure(provider, &AnyError::from("e-mail was not present in the token"));
     };
-    let user = User {
-        email,
-        expires_at: claims.exp,
-    };
+    let user = User::new(email,  claims.exp);
     let session_cookie = match user.into_cookie() {
         Ok(cookie) => cookie,
         Err(e) => {
-            return handle_authentication_failure(provider, &e.into());
+            return handle_authentication_failure(provider, &e);
         }
     };
     let mut response = Redirect::to("/").into_response();

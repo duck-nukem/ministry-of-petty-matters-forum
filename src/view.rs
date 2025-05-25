@@ -79,7 +79,7 @@ where
 }
 
 pub fn notify_maintainers_on_error(error: &AnyError) {
-    println!("Error occurred: {error}");
+    eprintln!("Error occurred: {error}");
 }
 
 pub fn show_not_found_page() -> Result<HtmlResponse, StatusCode> {

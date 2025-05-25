@@ -38,7 +38,7 @@ async fn main() {
     let address = APP_CONFIG.get_address();
     let listener = tokio::net::TcpListener::bind(&address)
     .await
-    .expect(format!("Failed to listen on {address}, maybe the port is already in use?").as_str());
+    .expect("Failed to bind listener on host & port, maybe the port is already in use?");
     axum::serve(listener, app)
         .await
         .expect("Failed to start the server (x_x')");

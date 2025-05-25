@@ -36,7 +36,7 @@ async fn oauth_callback(Form(body): Form<OauthResponse>) -> Response {
         }
     };
     let Some(email) = claims.email else {
-        return handle_authentication_failure(provider, &AnyError::from("Missing email"));
+        return handle_authentication_failure(provider, &AnyError::from("e-mail was not present in the token"));
     };
     let user = User {
         email,
@@ -51,6 +51,8 @@ async fn oauth_callback(Form(body): Form<OauthResponse>) -> Response {
     let mut response = Redirect::to("/").into_response();
     if let Ok(cookie_header) = HeaderValue::from_str(session_cookie.as_str()) {
         response.headers_mut().insert(SET_COOKIE, cookie_header);
+    } else {
+        return handle_authentication_failure(provider, &AnyError::from("Invalid cookie header"));
     }
 
     response

@@ -16,6 +16,11 @@ resource "digitalocean_app" "app_platform" {
 
       http_port = 3000
 
+      env {
+        key = "PUBLIC_ROOT_URL"
+        value = "https://production-hciwx.ondigitalocean.app"
+      }
+
       image {
         registry_type = var.registry_type
         repository    = var.docker_image_name

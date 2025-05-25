@@ -22,7 +22,7 @@ pub struct LoginPage {
 }
 
 async fn render_login_view(user: User) -> Result<HtmlResponse, StatusCode> {
-    let template = render_template!(LoginPage {root: APP_CONFIG.get_root_url(), user});
+    let template = render_template!(LoginPage {root: APP_CONFIG.public_root_url.clone(), user});
     Ok(HtmlResponse::from_string(template))
 }
 

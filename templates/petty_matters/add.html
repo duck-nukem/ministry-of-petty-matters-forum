@@ -3,6 +3,10 @@
 {% block content %}
 <h1>Register a Petty Matter</h1>
 <section>
+    {% if user.is_anonymous %}
+    <h3>You must be logged in to register a petty matter.</h3>
+    <a href="/auth">Log in</a>
+    {% else %}
     <form method="POST" action="/petty-matters">
         <label for="subject">Name:</label>
         <input type="text" id="subject" name="subject" required>
@@ -10,5 +14,6 @@
         <textarea id="content" name="content" required></textarea>
         <button tabindex="0" type="submit">Press Enter to Register</button>
     </form>
+    {% endif %}
 </section>
 {% endblock %}

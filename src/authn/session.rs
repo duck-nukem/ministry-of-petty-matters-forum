@@ -16,9 +16,24 @@ static DECODING_KEY: LazyLock<DecodingKey> = LazyLock::new(|| {
     DecodingKey::from_base64_secret(&APP_CONFIG.secret).expect("Failed to create decoding key")
 });
 
+#[derive(Clone, Debug, Eq, PartialEq, Serialize, Deserialize)]
+pub struct Username(pub String);
+
+impl Default for Username {
+    fn default() -> Self {
+        Username(String::from("anonymous@localhost"))
+    }
+}
+
+impl Display for Username {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        write!(f, "{}", self.0)
+    }
+}
+
 #[derive(Debug, Serialize, Deserialize)]
 pub struct User {
-    pub email: String,  // name mustn't change; must overlap with a "Claim"
+    pub email: Username,  // name mustn't change; must overlap with a "Claim"
     pub exp: usize,  // name mustn't change; must overlap with a "Claim"
     pub is_anonymous: bool,
 }
@@ -28,7 +43,7 @@ impl Display for User {
         write!(
             f,
             "User(email: {}, is_anonymous: {})",
-            self.email, self.is_anonymous
+            self.email.0, self.is_anonymous
         )
     }
 }
@@ -41,7 +56,7 @@ impl User {
         ))
     }
 
-    pub const fn new(email: String, expires_at: usize) -> Self {
+    pub const fn new(email: Username, expires_at: usize) -> Self {
         Self {
             email,
             exp: expires_at,
@@ -51,7 +66,7 @@ impl User {
 
     pub fn anonymous() -> Self {
         Self {
-            email: "anonymous@localhost".to_string(),
+            email: Username::default(),
             exp: 0,
             is_anonymous: true,
         }

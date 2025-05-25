@@ -7,7 +7,7 @@ use crate::view::{show_error_page, show_not_found_page, HtmlResponse};
 use askama::Template;
 use axum::extract::{Path, Query, State};
 use axum::http::StatusCode;
-use axum::response::{IntoResponse, Redirect};
+use axum::response::{IntoResponse, Redirect, Response};
 use axum::routing::{get, post};
 use axum::{Form, Router};
 use serde::Deserialize;
@@ -19,12 +19,15 @@ use crate::render_template;
 #[derive(Template)]
 #[template(path = "petty_matters/list.html")]
 pub struct PettyMattersList {
+    user: User,
     pub topics: Page<Topic>,
 }
 
 #[derive(Template)]
 #[template(path = "petty_matters/add.html")]
-pub struct PettyMattersRegistration {}
+pub struct PettyMattersRegistration {
+    user: User,
+}
 
 #[derive(Template)]
 #[template(path = "petty_matters/view.html")]
@@ -51,6 +54,7 @@ struct Pagination {
 }
 
 async fn list_petty_matters(
+    user: User,
     State(service): State<Arc<TopicService>>,
     pagination: Query<Pagination>,
 ) -> Result<HtmlResponse, StatusCode> {
@@ -63,25 +67,26 @@ async fn list_petty_matters(
         Ok(topics) => topics,
         Err(e) => return show_error_page(e),
     };
-    let template = render_template!(PettyMattersList { topics });
+    let template = render_template!(PettyMattersList { user, topics });
     Ok(HtmlResponse::from_string(template))
 }
 
-async fn render_registration_form() -> Result<HtmlResponse, StatusCode> {
-    let template = render_template!(PettyMattersRegistration {});
+async fn render_registration_form(user: User) -> Result<HtmlResponse, StatusCode> {
+    let template = render_template!(PettyMattersRegistration { user });
     Ok(HtmlResponse::from_string(template))
 }
 
 async fn register_petty_matter(
+    user: User,
     State(service): State<Arc<TopicService>>,
     form: Form<PettyMattersRegistrationForm>,
-) -> Result<impl IntoResponse, StatusCode> {
-    let topic = Topic::new(form.subject.clone(), form.content.clone());
-    service
-        .create_topic(topic)
-        .await
-        .map_err(|_| StatusCode::INTERNAL_SERVER_ERROR)?;
-    Ok(Redirect::to("/petty-matters"))
+) -> Result<Response, StatusCode> {
+    let topic = Topic::new(form.subject.clone(), form.content.clone(), user);
+    match service.create_topic(topic).await {
+        Ok(t) => t,
+        Err(e) => return Ok(show_error_page(e).into_response()),
+    }
+    Ok(Redirect::to("/petty-matters").into_response())
 }
 
 async fn view_petty_matter(

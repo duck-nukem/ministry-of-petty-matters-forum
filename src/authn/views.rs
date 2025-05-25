@@ -1,6 +1,6 @@
 use crate::authn::oauth::config::OAuthProvider;
 use crate::authn::oauth::token::validate_token;
-use crate::authn::session::User;
+use crate::authn::session::{User, Username};
 use crate::error::AnyError;
 use crate::render_template;
 use crate::view::HtmlResponse;
@@ -41,7 +41,7 @@ async fn oauth_callback(Form(body): Form<OauthResponse>) -> Response {
     let Some(email) = claims.email else {
         return handle_authentication_failure(provider, &AnyError::from("e-mail was not present in the token"));
     };
-    let user = User::new(email,  claims.exp);
+    let user = User::new(Username(email),  claims.exp);
     let session_cookie = match user.into_cookie() {
         Ok(cookie) => cookie,
         Err(e) => {

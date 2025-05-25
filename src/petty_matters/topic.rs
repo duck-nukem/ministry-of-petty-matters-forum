@@ -3,6 +3,7 @@ use crate::persistence::in_memory_repository::HasId;
 use chrono::{DateTime, Utc};
 use serde::Deserialize;
 use uuid::Uuid;
+use crate::authn::session::{User, Username};
 use crate::persistence::repository::Filterable;
 
 #[derive(Clone, Debug, Deserialize, Eq, PartialEq, Hash)]
@@ -21,6 +22,7 @@ pub struct Topic {
     pub content: String,
     pub upvotes_count: u32,
     pub downvotes_count: u32,
+    pub created_by: Username,
     pub creation_time: DateTime<Utc>,
     pub last_updated_time: Option<DateTime<Utc>>,
 }
@@ -33,6 +35,7 @@ impl Default for Topic {
             content: String::new(),
             upvotes_count: 0,
             downvotes_count: 0,
+            created_by: Username::default(),
             creation_time: Utc::now(),
             last_updated_time: None,
         }
@@ -40,13 +43,14 @@ impl Default for Topic {
 }
 
 impl Topic {
-    pub(crate) fn new(title: String, content: String) -> Self {
+    pub(crate) fn new(title: String, content: String, author: User) -> Self {
         Self {
             id: TopicId(Uuid::new_v4()),
             title,
             content,
             upvotes_count: 0,
             downvotes_count: 0,
+            created_by: author.email,
             creation_time: Utc::now(),
             last_updated_time: None,
         }

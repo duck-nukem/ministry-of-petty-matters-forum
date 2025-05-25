@@ -6,7 +6,9 @@
         <h1>Petty Matters</h1>
     </div>
     <div class="col">
+        {% if !user.is_anonymous %}
         <a class="page-header-primary-button button" href="/petty-matters/register">File your petty matter</a>
+        {% endif %}
     </div>
 </div>
 <section>
@@ -17,6 +19,7 @@
         <thead>
         <tr>
             <td>Title</td>
+            <td>Author</td>
             <td>Posted</td>
         </tr>
         </thead>
@@ -24,6 +27,7 @@
         {% for topic in topics.items %}
         <tr>
             <td><a href="/petty-matters/{{ topic.id }}" preload="mouseover">{{ topic.title }}</a></td>
+            <td>{{ topic.created_by }}</td>
             <td data-utcdate="{{ topic.creation_time.to_rfc3339() }}">{{ topic.creation_time.to_rfc3339() }}</td>
         </tr>
         {% endfor %}

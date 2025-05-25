@@ -17,11 +17,12 @@ use crate::config::APP_CONFIG;
 #[derive(Template)]
 #[template(path = "authn/login.html")]
 pub struct LoginPage {
-    root: String
+    root: String,
+    user: User,
 }
 
-async fn render_login_view() -> Result<HtmlResponse, StatusCode> {
-    let template = render_template!(LoginPage {root: APP_CONFIG.get_root_url()});
+async fn render_login_view(user: User) -> Result<HtmlResponse, StatusCode> {
+    let template = render_template!(LoginPage {root: APP_CONFIG.get_root_url(), user});
     Ok(HtmlResponse::from_string(template))
 }
 
@@ -77,8 +78,16 @@ fn delete_cookies(cookie_names: Vec<&str>, response: &mut Response) {
     });
 }
 
+async fn perform_logout() -> Result<Response, StatusCode> {
+    let mut response = Redirect::to("/").into_response();
+    delete_cookies(OAuthProvider::Google.get_session_cookie_names(), &mut response);
+
+    Ok(response)
+}
+
 pub fn auth_router() -> Router {
     Router::new()
         .route("/", get(render_login_view))
+        .route("/logout", post(perform_logout))
         .route("/callback", post(oauth_callback))
 }

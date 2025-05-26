@@ -25,7 +25,7 @@ pub struct Username(pub String);
 
 impl Default for Username {
     fn default() -> Self {
-        Username(String::from("anonymous@localhost"))
+        Self(String::from("anonymous@localhost"))
     }
 }
 

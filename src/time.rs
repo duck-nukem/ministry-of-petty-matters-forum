@@ -17,18 +17,18 @@ pub trait TimeUnit {
 
 impl TimeUnit for Minutes {
     fn to_seconds(&self) -> Seconds {
-        Seconds(self.0 as u32 * 60)
+        Seconds(u32::from(self.0) * 60)
     }
 }
 
 impl TimeUnit for Hours {
     fn to_seconds(&self) -> Seconds {
-        Seconds(self.0 as u32 * 3600)
+        Seconds(u32::from(self.0) * 3600)
     }
 }
 
 impl TimeUnit for Days {
     fn to_seconds(&self) -> Seconds {
-        Seconds(self.0 as u32 * 86400)
+        Seconds(u32::from(self.0) * 86400)
     }
 }

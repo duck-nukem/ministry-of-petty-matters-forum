@@ -24,9 +24,9 @@ pub static APP_CONFIG: LazyLock<Config> = LazyLock::new(|| {
     let secret = env::var("JWT_SECRET").unwrap_or_else(|_| DEVELOPMENT_ENCRYPTION_KEY.to_string());
 
     Config {
+        public_root_url,
         host,
         port,
         secret,
-        public_root_url,
     }
 });

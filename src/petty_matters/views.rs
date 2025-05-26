@@ -72,12 +72,12 @@ async fn list_petty_matters(
         Ok(topics) => topics,
         Err(e) => return show_error_page(e),
     };
-    let template = render_template!(PettyMattersList { nonce, user, topics });
+    let template = render_template!(PettyMattersList { user, nonce, topics });
     Ok(HtmlResponse::from_string(template))
 }
 
 async fn render_registration_form(nonce: Nonce, user: User) -> Result<HtmlResponse, StatusCode> {
-    let template = render_template!(PettyMattersRegistration { nonce, user });
+    let template = render_template!(PettyMattersRegistration { user, nonce });
     Ok(HtmlResponse::from_string(template))
 }
 
@@ -126,12 +126,13 @@ async fn view_petty_matter(
 }
 
 async fn add_comment(
+    user: User,
     Path(topic_id): Path<TopicId>,
     State(service): State<Arc<TopicService>>,
     form: Form<CommentForm>,
 ) -> Result<impl IntoResponse, StatusCode> {
     service
-        .reply_to_topic(&topic_id, form.content.clone())
+        .reply_to_topic(&topic_id, form.content.clone(), user)
         .await
         .map_err(|_| StatusCode::INTERNAL_SERVER_ERROR)?;
     Ok(Redirect::to(&format!("/petty-matters/{topic_id}")))

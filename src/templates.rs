@@ -5,6 +5,7 @@ use axum::http::StatusCode;
 use uuid::Uuid;
 
 pub mod filters {
+    #[allow(clippy::unnecessary_wraps)]
     pub fn markdown<T: std::fmt::Display>(
         s: T,
         _: &dyn askama::Values,
@@ -29,7 +30,7 @@ impl Display for Nonce {
 
 impl Nonce {
     pub fn new() -> Self {
-        Nonce(Uuid::new_v4().simple().to_string())
+        Self(Uuid::new_v4().simple().to_string())
     }
 }
 
@@ -40,6 +41,6 @@ where
     type Rejection = (StatusCode, &'static str);
 
     async fn from_request_parts(_parts: &mut Parts, _state: &S) -> Result<Self, Self::Rejection> {
-        Ok(Nonce::new())
+        Ok(Self::new())
     }
 }

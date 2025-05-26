@@ -21,7 +21,7 @@
 
     {% for comment in comments %}
     <div>
-        <p><strong>Anonymous</strong> commented:</p>
+        <p><strong>{{ comment.created_by }}</strong> commented:</p>
         <p>{{ comment.content | markdown | safe }}</p>
         <p><small>Posted on <span data-utcdate="{{ comment.creation_time.to_rfc3339() }}">{{ comment.creation_time.to_rfc3339() }}</span></small></p>
     </div>

@@ -3,6 +3,7 @@ use chrono::{DateTime, Utc};
 use serde::Deserialize;
 use std::fmt::{Display, Formatter};
 use uuid::Uuid;
+use crate::authn::session::{User, Username};
 use crate::persistence::in_memory_repository::HasId;
 use crate::persistence::repository::Filterable;
 
@@ -22,19 +23,21 @@ pub struct Comment {
     pub content: String,
     pub upvotes_count: u32,
     pub downvotes_count: u32,
+    pub created_by: Username,
     pub creation_time: DateTime<Utc>,
     pub last_updated_time: Option<DateTime<Utc>>,
 }
 
 
 impl Comment {
-    pub(crate) fn new(topic_id: TopicId, content: String) -> Self {
+    pub(crate) fn new(topic_id: TopicId, content: String, author: User) -> Self {
         Self {
             id: CommentId(Uuid::new_v4()),
             topic_id,
             content,
             upvotes_count: 0,
             downvotes_count: 0,
+            created_by: author.email,
             creation_time: Utc::now(),
             last_updated_time: None,
         }

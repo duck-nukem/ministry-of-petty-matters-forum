@@ -3,6 +3,7 @@ use crate::error::Result;
 use crate::persistence::repository::{ListParameters, Page, Repository};
 use crate::petty_matters::topic::{Topic, TopicId};
 use std::sync::Arc;
+use crate::authn::session::User;
 use crate::petty_matters::comment::{Comment, CommentId};
 
 type TopicRepository = dyn Repository<TopicId, Topic> + Send + Sync;
@@ -34,8 +35,8 @@ impl TopicService {
         self.topic_repository.list(list_parameters).await
     }
 
-    pub async fn reply_to_topic(&self, topic_id: &TopicId, message: String) -> Result<()> {
-        let comment = Comment::new(topic_id.clone(), message);
+    pub async fn reply_to_topic(&self, topic_id: &TopicId, message: String, user: User) -> Result<()> {
+        let comment = Comment::new(topic_id.clone(), message, user);
         self.comment_repository.save(comment).await
     }
 
@@ -84,7 +85,7 @@ mod tests {
             .await
             .expect("Failed to start topic");
 
-        topic_service.reply_to_topic(&topic.id, "This is a comment".to_string()).await.expect("Failed to add comment");
+        topic_service.reply_to_topic(&topic.id, "This is a comment".to_string(), User::anonymous()).await.expect("Failed to add comment");
 
         assert!(
             topic_service
@@ -110,7 +111,7 @@ mod tests {
             .await
             .expect("Failed to start topic");
 
-        topic_service.reply_to_topic(&unrelated_topic.id, "This is a comment".to_string()).await.expect("Failed to add comment");
+        topic_service.reply_to_topic(&unrelated_topic.id, "This is a comment".to_string(), User::anonymous()).await.expect("Failed to add comment");
 
         assert!(
             topic_service

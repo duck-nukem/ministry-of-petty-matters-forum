@@ -422,6 +422,14 @@ a:not(.button):hover {
     font-family: var(--body-font);
 }
 
+blockquote {
+    border-left: 4px solid var(--box-shadow);
+    padding-left: 1rem;
+    margin: 1rem 0;
+    font-style: italic;
+    color: var(--font-color);
+}
+
 footer {
     position: fixed;
     bottom: 0;

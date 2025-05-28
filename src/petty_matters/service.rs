@@ -3,24 +3,31 @@ use crate::error::Result;
 use crate::persistence::repository::{ListParameters, Page, Repository};
 use crate::petty_matters::comment::{Comment, CommentId};
 use crate::petty_matters::topic::{Topic, TopicId};
+use crate::queue::base::{Queue, QueueError, WriteOperation};
 use std::collections::HashMap;
 use std::sync::Arc;
-use crate::queue::base::{Queue, QueueError, WriteOperation};
 
-type TopicRepository = dyn Repository<TopicId, Topic> + Send + Sync;
-type CommentRepository = dyn Repository<CommentId, Comment> + Send + Sync;
-
-pub struct TopicService {
-    pub topic_repository: Arc<TopicRepository>,
-    pub comment_repository: Arc<CommentRepository>,
-    pub write_queue: Arc<dyn Queue + Send + Sync>,
+pub struct TopicService<T, C, Q>
+where
+    T: Repository<TopicId, Topic> + Send + Sync,
+    C: Repository<CommentId, Comment> + Send + Sync,
+    Q: Queue + Send + Sync,
+{
+    pub topic_repository: Arc<T>,
+    pub comment_repository: Arc<C>,
+    pub write_queue: Arc<Q>,
 }
 
-impl TopicService {
+impl<T, C, Q> TopicService<T, C, Q>
+where
+    T: Repository<TopicId, Topic> + Send + Sync,
+    C: Repository<CommentId, Comment> + Send + Sync,
+    Q: Queue + Send + Sync,
+{
     pub fn new(
-        topic_repository: Arc<TopicRepository>,
-        comment_repository: Arc<CommentRepository>,
-        write_queue: Arc<dyn Queue + Send + Sync>,
+        topic_repository: Arc<T>,
+        comment_repository: Arc<C>,
+        write_queue: Arc<Q>,
     ) -> Self {
         Self {
             topic_repository,

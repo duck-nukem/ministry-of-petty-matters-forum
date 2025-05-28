@@ -1,8 +1,11 @@
-use crate::templates::{filters, Nonce};
-use crate::persistence::repository::{ListParameters, Page, PageNumber, PageSize};
-use crate::petty_matters::comment::Comment;
+use crate::authn::session::User;
+use crate::persistence::repository::{ListParameters, Page, PageNumber, PageSize, Repository};
+use crate::petty_matters::comment::{Comment, CommentId};
 use crate::petty_matters::service::TopicService;
 use crate::petty_matters::topic::{Topic, TopicId};
+use crate::queue::base::Queue;
+use crate::render_template;
+use crate::templates::{filters, Nonce};
 use crate::time::Seconds;
 use crate::view::{show_error_page, show_not_found_page, HtmlResponse};
 use askama::Template;
@@ -14,8 +17,6 @@ use axum::{Form, Router};
 use serde::Deserialize;
 use std::collections::HashMap;
 use std::sync::Arc;
-use crate::authn::session::User;
-use crate::render_template;
 
 #[derive(Template)]
 #[template(path = "petty_matters/list.html")]
@@ -57,12 +58,17 @@ struct Pagination {
     page_size: Option<PageSize>,
 }
 
-async fn list_petty_matters(
+async fn list_petty_matters<T, C, Q>(
     user: User,
     nonce: Nonce,
-    State(service): State<Arc<TopicService>>,
+    State(service): State<Arc<TopicService<T, C, Q>>>,
     pagination: Query<Pagination>,
-) -> Result<HtmlResponse, StatusCode> {
+) -> Result<HtmlResponse, StatusCode>
+where
+    T: Repository<TopicId, Topic> + Send + Sync,
+    C: Repository<CommentId, Comment> + Send + Sync,
+    Q: Queue + Send + Sync,
+{
     let list_parameters = ListParameters {
         page_number: pagination.page.unwrap_or(PageNumber(1)),
         page_size: pagination.page_size.unwrap_or(PageSize(10)),
@@ -72,7 +78,11 @@ async fn list_petty_matters(
         Ok(topics) => topics,
         Err(e) => return show_error_page(e),
     };
-    let template = render_template!(PettyMattersList { user, nonce, topics });
+    let template = render_template!(PettyMattersList {
+        user,
+        nonce,
+        topics
+    });
     Ok(HtmlResponse::from_string(template))
 }
 
@@ -81,11 +91,16 @@ async fn render_registration_form(nonce: Nonce, user: User) -> Result<HtmlRespon
     Ok(HtmlResponse::from_string(template))
 }
 
-async fn register_petty_matter(
+async fn register_petty_matter<T, C, Q>(
     user: User,
-    State(service): State<Arc<TopicService>>,
+    State(service): State<Arc<TopicService<T, C, Q>>>,
     form: Form<PettyMattersRegistrationForm>,
-) -> Result<Response, StatusCode> {
+) -> Result<Response, StatusCode>
+where
+    T: Repository<TopicId, Topic> + Send + Sync,
+    C: Repository<CommentId, Comment> + Send + Sync,
+    Q: Queue + Send + Sync,
+{
     let topic = Topic::new(form.subject.clone(), form.content.clone(), user);
     match service.create_topic(topic).await {
         Ok(t) => t,
@@ -94,11 +109,16 @@ async fn register_petty_matter(
     Ok(Redirect::to("/petty-matters").into_response())
 }
 
-async fn view_petty_matter(
+async fn view_petty_matter<T, C, Q>(
     nonce: Nonce,
     Path(topic_id): Path<TopicId>,
-    State(service): State<Arc<TopicService>>,
-) -> Result<HtmlResponse, StatusCode> {
+    State(service): State<Arc<TopicService<T, C, Q>>>,
+) -> Result<HtmlResponse, StatusCode>
+where
+    T: Repository<TopicId, Topic> + Send + Sync,
+    C: Repository<CommentId, Comment> + Send + Sync,
+    Q: Queue + Send + Sync,
+{
     let topic = match service.get_topic(&topic_id).await {
         Ok(Some(t)) => t,
         Ok(None) => return show_not_found_page(),
@@ -125,12 +145,17 @@ async fn view_petty_matter(
     Ok(HtmlResponse::cached(template, Seconds(60)))
 }
 
-async fn add_comment(
+async fn add_comment<T, C, Q>(
     user: User,
     Path(topic_id): Path<TopicId>,
-    State(service): State<Arc<TopicService>>,
+    State(service): State<Arc<TopicService<T, C, Q>>>,
     form: Form<CommentForm>,
-) -> Result<impl IntoResponse, StatusCode> {
+) -> Result<impl IntoResponse, StatusCode>
+where
+    T: Repository<TopicId, Topic> + Send + Sync,
+    C: Repository<CommentId, Comment> + Send + Sync,
+    Q: Queue + Send + Sync,
+{
     service
         .reply_to_topic(&topic_id, form.content.clone(), user)
         .await
@@ -138,7 +163,12 @@ async fn add_comment(
     Ok(Redirect::to(&format!("/petty-matters/{topic_id}")))
 }
 
-pub fn topics_router(service: Arc<TopicService>) -> Router {
+pub fn topics_router<T, C, Q>(service: Arc<TopicService<T, C, Q>>) -> Router
+where
+    T: Repository<TopicId, Topic> + Send + Sync + 'static,
+    C: Repository<CommentId, Comment> + Send + Sync + 'static,
+    Q: Queue + Send + Sync + 'static,
+{
     Router::new()
         .route("/", get(list_petty_matters).post(register_petty_matter))
         .route("/register", get(render_registration_form))

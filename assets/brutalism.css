@@ -355,6 +355,10 @@ select[multiple] {
     margin-bottom: 1rem;
 }
 
+code {
+    font-size: 0.8rem;
+}
+
 table {
     width: 100%;
     border-collapse: collapse;

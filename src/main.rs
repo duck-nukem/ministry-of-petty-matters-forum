@@ -8,7 +8,8 @@ use petty_matters::service::TopicService;
 use std::sync::Arc;
 use tokio::sync::mpsc::channel;
 use tower_http::services::ServeDir;
-use crate::queue::{start_write_worker, WriteQueue};
+use crate::queue::in_memory_queue::WriteQueue;
+use crate::queue::worker::start_write_worker;
 
 mod authn;
 mod config;

@@ -3,9 +3,9 @@ use crate::error::Result;
 use crate::persistence::repository::{ListParameters, Page, Repository};
 use crate::petty_matters::comment::{Comment, CommentId};
 use crate::petty_matters::topic::{Topic, TopicId};
-use crate::queue::{Queue, QueueError, WriteOperation};
 use std::collections::HashMap;
 use std::sync::Arc;
+use crate::queue::base::{Queue, QueueError, WriteOperation};
 
 type TopicRepository = dyn Repository<TopicId, Topic> + Send + Sync;
 type CommentRepository = dyn Repository<CommentId, Comment> + Send + Sync;
@@ -73,7 +73,7 @@ mod tests {
     use super::*;
     use crate::persistence::in_memory_repository::InMemoryRepository;
     use crate::petty_matters::topic::Topic;
-    use crate::queue::StubQueue;
+    use crate::queue::stub_queue::StubQueue;
 
     #[tokio::test]
     async fn test_start_topic_should_persist_a_topic() {

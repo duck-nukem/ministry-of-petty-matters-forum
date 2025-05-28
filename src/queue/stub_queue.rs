@@ -11,6 +11,7 @@ pub struct StubQueue {
     pub comment_repository: Arc<dyn Repository<CommentId, Comment> + Send + Sync>,
 }
 
+#[allow(dead_code)]
 impl StubQueue {
     pub fn new(
         topic_repository: Arc<dyn Repository<TopicId, Topic> + Send + Sync>,

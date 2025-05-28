@@ -6,7 +6,9 @@ use axum::response::Redirect;
 use axum::{routing::get, Router};
 use petty_matters::service::TopicService;
 use std::sync::Arc;
+use tokio::sync::mpsc::channel;
 use tower_http::services::ServeDir;
+use crate::write_queue::{start_write_worker, WriteQueue};
 
 mod authn;
 mod config;
@@ -16,15 +18,20 @@ mod petty_matters;
 mod templates;
 mod time;
 mod view;
+mod write_queue;
 
 static MAIN_ENTRY_POINT: &str = "/petty-matters";
 
 #[tokio::main]
 #[allow(clippy::expect_used)]
 async fn main() {
+    let (tx, rx) = channel(100);
+    let write_queue = WriteQueue::new(tx);
+
     let topic_repository = Arc::new(InMemoryRepository::new());
     let comment_repository = Arc::new(InMemoryRepository::new());
-    let topic_service = Arc::new(TopicService::new(topic_repository, comment_repository));
+    tokio::spawn(start_write_worker(rx, topic_repository.clone(), comment_repository.clone()));
+    let topic_service = Arc::new(TopicService::new(topic_repository, comment_repository, write_queue));
 
     let app = Router::new()
         .route("/", get(|| async { Redirect::to(MAIN_ENTRY_POINT) }))

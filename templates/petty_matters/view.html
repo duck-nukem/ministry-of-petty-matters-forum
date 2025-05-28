@@ -1,6 +1,12 @@
 {% extends "base.html" %}
 {% block title %}{{topic.title}}{% endblock %}
 {% block content %}
+
+{% block head %}
+<link rel="stylesheet" href="/assets/vendor/highlight_ascetic_theme.css">
+<script nonce="{{nonce}}" src="/assets/vendor/highlight.min.js"></script>
+{% endblock %}
+
 <h1 class="post-page-title">{{ topic.title }}</h1>
 <section>
     <h5 class="breadcrumbs"><a href="/petty-matters">Petty Matters</a> / {{ topic.title }}</h5>
@@ -27,4 +33,6 @@
     </div>
     {% endfor %}
 </section>
+<script nonce="{{nonce}}" >hljs.highlightAll();</script>
+
 {% endblock %}

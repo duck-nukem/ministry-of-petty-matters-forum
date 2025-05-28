@@ -4,7 +4,7 @@
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     {% block csp %}
-    <meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'nonce-{{nonce}}'; img-src *; style-src 'self' https://fonts.googleapis.com  https://accounts.google.com/gsi/style; font-src https://fonts.gstatic.com; object-src 'none'; media-src 'none'; frame-src https://accounts.google.com/gsi/; connect-src https://accounts.google.com/gsi/; base-uri 'none'; form-action 'self';">
+    <meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'nonce-{{nonce}}'; img-src *; style-src 'self' https://fonts.googleapis.com  https://accounts.google.com/gsi/style; font-src https://fonts.gstatic.com; object-src 'none'; media-src 'none'; frame-src https://accounts.google.com/gsi/; connect-src 'self' https://accounts.google.com/gsi/; base-uri 'none'; form-action 'self';">
     {% endblock %}
     <title>{% block title %}{{ title }}{% endblock %} - Ministry of Petty Matters</title>
     {% block head %}{% endblock %}

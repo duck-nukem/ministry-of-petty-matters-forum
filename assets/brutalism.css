@@ -430,6 +430,13 @@ blockquote {
     color: var(--font-color);
 }
 
+img {
+    max-width: 100%;
+    height: auto;
+    display: block;
+    margin: 1rem 0;
+}
+
 footer {
     position: fixed;
     bottom: 0;

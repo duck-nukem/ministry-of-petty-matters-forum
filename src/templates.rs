@@ -15,8 +15,9 @@ pub mod filters {
 
         let mut buf = String::new();
         pulldown_cmark::html::push_html(&mut buf, parser);
+        let result = buf.replace("<img", "<img loading=\"lazy\"");
 
-        Ok(buf)
+        Ok(result)
     }
 }
 

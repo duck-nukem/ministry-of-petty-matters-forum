@@ -8,7 +8,7 @@ use petty_matters::service::TopicService;
 use std::sync::Arc;
 use tokio::sync::mpsc::channel;
 use tower_http::services::ServeDir;
-use crate::write_queue::{start_write_worker, WriteQueue};
+use crate::queue::{start_write_worker, WriteQueue};
 
 mod authn;
 mod config;
@@ -18,7 +18,7 @@ mod petty_matters;
 mod templates;
 mod time;
 mod view;
-mod write_queue;
+mod queue;
 
 static MAIN_ENTRY_POINT: &str = "/petty-matters";
 
@@ -26,7 +26,7 @@ static MAIN_ENTRY_POINT: &str = "/petty-matters";
 #[allow(clippy::expect_used)]
 async fn main() {
     let (tx, rx) = channel(100);
-    let write_queue = WriteQueue::new(tx);
+    let write_queue = Arc::new(WriteQueue::new(tx));
 
     let topic_repository = Arc::new(InMemoryRepository::new());
     let comment_repository = Arc::new(InMemoryRepository::new());

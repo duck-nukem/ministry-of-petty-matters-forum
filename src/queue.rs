@@ -3,6 +3,7 @@ use crate::petty_matters::comment::{Comment, CommentId};
 use crate::petty_matters::topic::{Topic, TopicId};
 use std::fmt::Display;
 use std::sync::Arc;
+use async_trait::async_trait;
 use tokio::sync::mpsc::{Receiver, Sender};
 
 pub enum WriteOperation {
@@ -27,31 +28,67 @@ impl Display for QueueError {
 
 impl std::error::Error for QueueError {}
 
+#[async_trait]
+pub trait Queue {
+    async fn enqueue(&self, op: WriteOperation) -> Result<(), QueueError>;
+}
+
 #[derive(Clone)]
 pub struct WriteQueue {
-    pub sender: Option<Sender<WriteOperation>>,
+    pub sender: Sender<WriteOperation>,
 }
 
 impl WriteQueue {
     pub fn new(sender: Sender<WriteOperation>) -> Self {
+        Self { sender }
+    }
+}
+
+#[async_trait]
+impl Queue for WriteQueue {
+    async fn enqueue(&self, op: WriteOperation) -> Result<(), QueueError> {
+        self
+            .sender
+            .send(op)
+            .await
+            .map_err(|e| QueueError::SendError(e.to_string()))
+    }
+}
+
+#[derive(Clone)]
+pub struct StubQueue {
+    pub topic_repository: Arc<dyn Repository<TopicId, Topic> + Send + Sync>,
+    pub comment_repository: Arc<dyn Repository<CommentId, Comment> + Send + Sync>,
+}
+
+impl StubQueue {
+    pub fn new(
+        topic_repository: Arc<dyn Repository<TopicId, Topic> + Send + Sync>,
+        comment_repository: Arc<dyn Repository<CommentId, Comment> + Send + Sync>,
+    ) -> Self {
         Self {
-            sender: Some(sender),
+            topic_repository,
+            comment_repository,
         }
     }
+}
 
-    #[allow(dead_code)]
-    pub fn noop() -> Self {
-        Self { sender: None }
-    }
-
-    pub async fn enqueue(&self, op: WriteOperation) -> Result<(), QueueError> {
-        if let Some(sender) = &self.sender {
-            sender
-                .send(op)
-                .await
-                .map_err(|_| QueueError::SendError("Can't accept operation".to_string()))
-        } else {
-            Ok(())
+#[async_trait]
+impl Queue for StubQueue {
+    async fn enqueue(&self, op: WriteOperation) -> Result<(), QueueError> {
+        match op {
+            WriteOperation::CreateTopic(topic) => {
+                self.topic_repository
+                    .save(topic)
+                    .await
+                    .map_err(|e| QueueError::OperationFailed(e.to_string()))
+            }
+            WriteOperation::AddComment(comment) => {
+                self.comment_repository
+                    .save(comment)
+                    .await
+                    .map_err(|e| QueueError::OperationFailed(e.to_string()))
+            }
         }
     }
 }

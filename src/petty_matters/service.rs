@@ -3,9 +3,9 @@ use crate::error::Result;
 use crate::persistence::repository::{ListParameters, Page, Repository};
 use crate::petty_matters::comment::{Comment, CommentId};
 use crate::petty_matters::topic::{Topic, TopicId};
+use crate::queue::{Queue, QueueError, WriteOperation};
 use std::collections::HashMap;
 use std::sync::Arc;
-use crate::write_queue::{QueueError, WriteOperation, WriteQueue};
 
 type TopicRepository = dyn Repository<TopicId, Topic> + Send + Sync;
 type CommentRepository = dyn Repository<CommentId, Comment> + Send + Sync;
@@ -13,14 +13,14 @@ type CommentRepository = dyn Repository<CommentId, Comment> + Send + Sync;
 pub struct TopicService {
     pub topic_repository: Arc<TopicRepository>,
     pub comment_repository: Arc<CommentRepository>,
-    pub write_queue: WriteQueue,
+    pub write_queue: Arc<dyn Queue + Send + Sync>,
 }
 
 impl TopicService {
     pub fn new(
         topic_repository: Arc<TopicRepository>,
         comment_repository: Arc<CommentRepository>,
-        write_queue: WriteQueue,
+        write_queue: Arc<dyn Queue + Send + Sync>,
     ) -> Self {
         Self {
             topic_repository,
@@ -30,7 +30,9 @@ impl TopicService {
     }
 
     pub async fn create_topic(&self, topic: Topic) -> std::result::Result<(), QueueError> {
-        self.write_queue.enqueue(WriteOperation::CreateTopic(topic)).await
+        self.write_queue
+            .enqueue(WriteOperation::CreateTopic(topic))
+            .await
     }
 
     pub async fn get_topic(&self, topic_id: &TopicId) -> Result<Option<Topic>> {
@@ -48,7 +50,9 @@ impl TopicService {
         user: User,
     ) -> std::result::Result<(), QueueError> {
         let comment = Comment::new(topic_id.clone(), message, user);
-        self.write_queue.enqueue(WriteOperation::AddComment(comment)).await
+        self.write_queue
+            .enqueue(WriteOperation::AddComment(comment))
+            .await
     }
 
     pub async fn list_comments(
@@ -69,13 +73,15 @@ mod tests {
     use super::*;
     use crate::persistence::in_memory_repository::InMemoryRepository;
     use crate::petty_matters::topic::Topic;
+    use crate::queue::StubQueue;
 
     #[tokio::test]
     async fn test_start_topic_should_persist_a_topic() {
-        let topic_repository = InMemoryRepository::new();
-        let comment_repository = InMemoryRepository::new();
+        let topic_repository = Arc::new(InMemoryRepository::new());
+        let comment_repository = Arc::new(InMemoryRepository::new());
+        let queue = StubQueue::new(topic_repository.clone(), comment_repository.clone());
         let topic_service =
-            TopicService::new(Arc::new(topic_repository), Arc::new(comment_repository), WriteQueue::noop());
+            TopicService::new(topic_repository, comment_repository, Arc::new(queue));
         let topic = Topic::default();
 
         topic_service
@@ -93,10 +99,11 @@ mod tests {
 
     #[tokio::test]
     async fn test_should_add_comment_to_a_topic() {
-        let topic_repository = InMemoryRepository::new();
-        let comment_repository = InMemoryRepository::new();
+        let topic_repository = Arc::new(InMemoryRepository::new());
+        let comment_repository = Arc::new(InMemoryRepository::new());
+        let queue = StubQueue::new(topic_repository.clone(), comment_repository.clone());
         let topic_service =
-            TopicService::new(Arc::new(topic_repository), Arc::new(comment_repository), WriteQueue::noop());
+            TopicService::new(topic_repository, comment_repository, Arc::new(queue));
         let topic = Topic::default();
         topic_service
             .create_topic(topic.clone())
@@ -125,10 +132,11 @@ mod tests {
 
     #[tokio::test]
     async fn test_should_only_return_comments_relevant_for_the_topic() {
-        let topic_repository = InMemoryRepository::new();
-        let comment_repository = InMemoryRepository::new();
+        let topic_repository = Arc::new(InMemoryRepository::new());
+        let comment_repository = Arc::new(InMemoryRepository::new());
+        let queue = StubQueue::new(topic_repository.clone(), comment_repository.clone());
         let topic_service =
-            TopicService::new(Arc::new(topic_repository), Arc::new(comment_repository), WriteQueue::noop());
+            TopicService::new(topic_repository, comment_repository, Arc::new(queue));
         let unrelated_topic = Topic::default();
         topic_service
             .create_topic(unrelated_topic.clone())

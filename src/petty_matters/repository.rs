@@ -34,7 +34,7 @@ impl Filterable for Model {
 
 impl HasId<Uuid> for Model {
     fn id(&self) -> Uuid {
-        todo!()
+        self.id
     }
 }
 

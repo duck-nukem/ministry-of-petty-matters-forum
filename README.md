@@ -2,7 +2,7 @@
 
 ## Migrations
 
-1. Install `cargo install sqlx-cli --no-default-features --features sqlite`
-2. Run `sqlx migrate add <migration_name>` to create a new migration file.
-3. Edit the migration file in `migrations` directory to add your SQL commands.
-4. Run `sqlx migrate run` to apply the migration to the database.
+1. Install `cargo install sea-orm-cli --features sqlx-postgres` (check `Cargo.toml` for the latest version).
+2. Set the connection string via `export DATABASE_URL="postgresql://postgres:password@localhost:5432/postgres"`
+3. `sea-orm-cli migrate generate --name <migration_name>` to create a new migration.
+4. `sea-orm-cli migrate up` to apply all pending migrations

@@ -4,7 +4,7 @@ use crate::petty_matters::topic::{Topic, TopicId};
 use async_trait::async_trait;
 use chrono::Utc;
 use sea_orm::entity::prelude::*;
-use sea_orm::{DeriveEntityModel, Set};
+use sea_orm::{DeriveEntityModel, QueryOrder, QuerySelect, Set};
 use serde::{Deserialize, Serialize};
 
 #[derive(Clone, Debug, PartialEq, Eq, DeriveEntityModel, Serialize, Deserialize)]
@@ -45,7 +45,34 @@ pub struct TopicRepository {
 #[async_trait]
 impl Repository<TopicId, Topic> for TopicRepository {
     async fn list(&self, list_parameters: ListParameters) -> crate::error::Result<Page<Topic>> {
-        todo!()
+        let count = Entity::find()
+            .count(&self.db)
+            .await?;
+        let data = Entity::find()
+            .offset(Some(list_parameters.page_number.0 as u64 * list_parameters.page_size.0 as u64))
+            .limit(Some(list_parameters.page_size.0 as u64))
+            .order_by_desc(Column::CreationTime)
+            .all(&self.db)
+            .await?;
+
+        Ok(Page {
+            items: data
+                .into_iter()
+                .map(|record| Topic {
+                    id: TopicId(record.id),
+                    title: record.title,
+                    content: record.content,
+                    upvotes_count: record.upvotes_count as u32,
+                    downvotes_count: record.downvotes_count as u32,
+                    created_by: Username(record.created_by),
+                    creation_time: record.creation_time,
+                    last_updated_time: record.last_updated_time,
+                })
+                .collect(),
+            size: list_parameters.page_size,
+            current_page_number: list_parameters.page_number,
+            total_count: count as usize,
+        })
     }
 
     async fn save(&self, entity: Topic) -> crate::error::Result<()> {
@@ -83,7 +110,7 @@ impl Repository<TopicId, Topic> for TopicRepository {
 
     async fn delete(&self, id: &TopicId) -> crate::error::Result<()> {
         Entity::delete_by_id(id.0).exec(&self.db).await?;
-        
+
         Ok(())
     }
 }

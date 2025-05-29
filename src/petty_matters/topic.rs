@@ -1,10 +1,10 @@
-use std::fmt::{Display, Formatter};
-use crate::persistence::repository::HasId;
-use chrono::{DateTime, Utc};
-use serde::Deserialize;
-use uuid::Uuid;
 use crate::authn::session::{User, Username};
 use crate::persistence::repository::Filterable;
+use crate::persistence::repository::HasId;
+use chrono::{DateTime, Utc};
+use serde::{Deserialize};
+use std::fmt::{Display, Formatter};
+use uuid::Uuid;
 
 #[derive(Clone, Debug, Deserialize, Eq, PartialEq, Hash)]
 pub struct TopicId(pub Uuid);

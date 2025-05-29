@@ -1,0 +1,74 @@
+use crate::authn::session::Username;
+use crate::persistence::repository::{Filterable, HasId, ListParameters, Page, Repository};
+use crate::petty_matters::topic::{Topic, TopicId};
+use async_trait::async_trait;
+use chrono::Utc;
+use sea_orm::entity::prelude::*;
+use sea_orm::{DeriveEntityModel, Set};
+use serde::{Deserialize, Serialize};
+
+#[derive(Clone, Debug, PartialEq, Eq, DeriveEntityModel, Serialize, Deserialize)]
+#[sea_orm(table_name = "topics")]
+pub struct Model {
+    #[sea_orm(primary_key)]
+    pub id: Uuid,
+    pub title: String,
+    pub content: String,
+    pub upvotes_count: i32,
+    pub downvotes_count: i32,
+    pub created_by: String,
+    pub creation_time: chrono::DateTime<Utc>,
+    pub last_updated_time: Option<chrono::DateTime<Utc>>,
+}
+
+#[derive(Copy, Clone, Debug, EnumIter, DeriveRelation)]
+pub enum Relation {}
+
+impl ActiveModelBehavior for ActiveModel {}
+
+impl Filterable for Model {
+    fn get_field_value(&self, field: &str) -> Option<String> {
+        todo!()
+    }
+}
+
+impl HasId<Uuid> for Model {
+    fn id(&self) -> Uuid {
+        todo!()
+    }
+}
+
+pub struct TopicRepository {
+    pub db: DatabaseConnection,
+}
+
+#[async_trait]
+impl Repository<TopicId, Topic> for TopicRepository {
+    async fn list(&self, list_parameters: ListParameters) -> crate::error::Result<Page<Topic>> {
+        todo!()
+    }
+
+    async fn save(&self, entity: Topic) -> crate::error::Result<()> {
+        let active_model = ActiveModel {
+            id: Set(entity.id.0),
+            title: Set(entity.title),
+            content: Set(entity.content),
+            upvotes_count: Set(entity.upvotes_count as i32),
+            downvotes_count: Set(entity.downvotes_count as i32),
+            created_by: Set(entity.created_by.to_string()),
+            creation_time: Set(entity.creation_time),
+            last_updated_time: Set(entity.last_updated_time),
+        };
+        active_model.save(&self.db).await?;
+
+        Ok(())
+    }
+
+    async fn get_by_id(&self, id: &TopicId) -> crate::error::Result<Option<Topic>> {
+        todo!()
+    }
+
+    async fn delete(&self, id: &TopicId) -> crate::error::Result<()> {
+        todo!()
+    }
+}

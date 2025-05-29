@@ -2,7 +2,6 @@ use std::collections::HashMap;
 use crate::error::Result;
 use async_trait::async_trait;
 use serde::Deserialize;
-use crate::persistence::in_memory_repository::HasId;
 
 #[derive(Clone, Copy, Default, Deserialize, Eq, PartialEq)]
 pub struct PageNumber(pub usize);
@@ -71,4 +70,8 @@ where
     async fn save(&self, entity: Entity) -> Result<()>;
     async fn get_by_id(&self, id: &ID) -> Result<Option<Entity>>;
     async fn delete(&self, id: &ID) -> Result<()>;
+}
+
+pub trait HasId<ID> {
+    fn id(&self) -> ID;
 }

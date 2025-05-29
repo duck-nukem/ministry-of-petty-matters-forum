@@ -1,5 +1,5 @@
 use crate::error::Result;
-use crate::persistence::repository::{Filterable, ListParameters, Page, Repository};
+use crate::persistence::repository::{Filterable, HasId, ListParameters, Page, Repository};
 use async_trait::async_trait;
 use std::collections::HashMap;
 use std::hash::Hash;
@@ -19,10 +19,6 @@ where
             store: Arc::new(Mutex::new(HashMap::new())),
         }
     }
-}
-
-pub trait HasId<ID> {
-    fn id(&self) -> ID;
 }
 
 #[async_trait]
@@ -73,10 +69,8 @@ where
 
 #[cfg(test)]
 mod tests {
-    use crate::persistence::in_memory_repository::{HasId, InMemoryRepository};
-    use crate::persistence::repository::{
-        Filterable, ListParameters, PageNumber, PageSize, Repository,
-    };
+    use crate::persistence::in_memory_repository::InMemoryRepository;
+    use crate::persistence::repository::{Filterable, HasId, ListParameters, PageNumber, PageSize, Repository};
 
     type StubId = i32;
 

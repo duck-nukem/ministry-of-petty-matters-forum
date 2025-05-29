@@ -4,7 +4,7 @@ use serde::Deserialize;
 use std::fmt::{Display, Formatter};
 use uuid::Uuid;
 use crate::authn::session::{User, Username};
-use crate::persistence::in_memory_repository::HasId;
+use crate::persistence::repository::HasId;
 use crate::persistence::repository::Filterable;
 
 #[derive(Clone, Deserialize, Eq, PartialEq, Hash)]

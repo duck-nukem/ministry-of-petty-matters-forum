@@ -1,5 +1,5 @@
 use std::fmt::{Display, Formatter};
-use crate::persistence::in_memory_repository::HasId;
+use crate::persistence::repository::HasId;
 use chrono::{DateTime, Utc};
 use serde::Deserialize;
 use uuid::Uuid;

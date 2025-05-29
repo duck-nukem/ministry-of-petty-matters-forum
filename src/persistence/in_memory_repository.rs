@@ -35,7 +35,7 @@ where
         let page = Page {
             current_page_number: list_parameters.page_number,
             size: list_parameters.page_size,
-            total_count: key_value_pairs.len(),
+            total_count: key_value_pairs.len() as u64,
             items: key_value_pairs
                 .filter(|entity| {
                     list_parameters.filters.as_ref().is_none_or(|filters| {

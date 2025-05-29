@@ -71,7 +71,7 @@ impl Repository<TopicId, Topic> for TopicRepository {
                 .collect(),
             size: list_parameters.page_size,
             current_page_number: list_parameters.page_number,
-            total_count: count as usize,
+            total_count: count,
         })
     }
 

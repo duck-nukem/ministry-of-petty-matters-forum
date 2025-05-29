@@ -33,7 +33,7 @@ pub trait Filterable {
 pub struct Page<T> {
     pub current_page_number: PageNumber,
     pub size: PageSize,
-    pub total_count: usize,
+    pub total_count: u64,
     pub items: Vec<T>,
 }
 
@@ -43,7 +43,7 @@ impl<T> Page<T> {
     }
     
     pub const fn has_next_page(&self) -> bool {
-        self.total_count > self.current_page_number.0 * self.size.0
+        self.total_count > (self.current_page_number.0 * self.size.0) as u64
     }
     
     pub const fn get_next_page_number(&self) -> usize {

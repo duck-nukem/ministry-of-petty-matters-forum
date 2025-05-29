@@ -65,7 +65,20 @@ impl Repository<TopicId, Topic> for TopicRepository {
     }
 
     async fn get_by_id(&self, id: &TopicId) -> crate::error::Result<Option<Topic>> {
-        todo!()
+        match Entity::find_by_id(id.0).one(&self.db).await {
+            Ok(Some(record)) => Ok(Some(Topic {
+                id: TopicId(record.id),
+                title: record.title,
+                content: record.content,
+                upvotes_count: record.upvotes_count as u32,
+                downvotes_count: record.downvotes_count as u32,
+                created_by: Username(record.created_by),
+                creation_time: record.creation_time,
+                last_updated_time: record.last_updated_time,
+            })),
+            Ok(None) => Ok(None),
+            Err(_) => Ok(None),
+        }
     }
 
     async fn delete(&self, id: &TopicId) -> crate::error::Result<()> {

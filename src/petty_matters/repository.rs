@@ -82,6 +82,8 @@ impl Repository<TopicId, Topic> for TopicRepository {
     }
 
     async fn delete(&self, id: &TopicId) -> crate::error::Result<()> {
-        todo!()
+        Entity::delete_by_id(id.0).exec(&self.db).await?;
+        
+        Ok(())
     }
 }

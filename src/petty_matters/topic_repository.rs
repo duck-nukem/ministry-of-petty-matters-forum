@@ -44,6 +44,7 @@ pub struct TopicRepository {
 
 #[async_trait]
 impl Repository<TopicId, Topic> for TopicRepository {
+    #[allow(clippy::cast_sign_loss)]
     async fn list(&self, list_parameters: ListParameters) -> crate::error::Result<Page<Topic>> {
         let count = Entity::find()
             .count(&self.db)
@@ -75,6 +76,7 @@ impl Repository<TopicId, Topic> for TopicRepository {
         })
     }
 
+    #[allow(clippy::cast_possible_wrap)]
     async fn save(&self, entity: Topic) -> crate::error::Result<()> {
         let mut active_model = ActiveModel {
             id: Set(entity.id.0),
@@ -97,6 +99,7 @@ impl Repository<TopicId, Topic> for TopicRepository {
         Ok(())
     }
 
+    #[allow(clippy::cast_sign_loss)]
     async fn get_by_id(&self, id: &TopicId) -> crate::error::Result<Option<Topic>> {
         match Entity::find_by_id(id.0).one(&self.db).await {
             Ok(Some(record)) => Ok(Some(Topic {
@@ -109,8 +112,7 @@ impl Repository<TopicId, Topic> for TopicRepository {
                 creation_time: record.creation_time,
                 last_updated_time: record.last_updated_time,
             })),
-            Ok(None) => Ok(None),
-            Err(_) => Ok(None),
+            Ok(None) | Err(_) => Ok(None),
         }
     }
 

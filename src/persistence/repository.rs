@@ -27,11 +27,11 @@ impl Default for ListParameters {
 }
 
 impl ListParameters {
-    pub fn calculate_offset(&self) -> usize {
+    pub const fn calculate_offset(&self) -> usize {
         (self.page_number.0 - 1) * self.page_size.0
     }
     
-    pub fn calculate_limit(&self) -> usize {
+    pub const fn calculate_limit(&self) -> usize {
         self.page_size.0
     }
 }

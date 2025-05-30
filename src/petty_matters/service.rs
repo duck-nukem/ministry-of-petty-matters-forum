@@ -24,7 +24,7 @@ where
     C: Repository<CommentId, Comment> + Send + Sync,
     Q: Queue + Send + Sync,
 {
-    pub fn new(
+    pub const fn new(
         topic_repository: Arc<T>,
         comment_repository: Arc<C>,
         write_queue: Arc<Q>,

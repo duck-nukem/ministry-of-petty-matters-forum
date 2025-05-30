@@ -18,8 +18,8 @@ pub enum QueueError {
 impl Display for QueueError {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         match self {
-            QueueError::SendError(msg) => write!(f, "Send error: {}", msg),
-            QueueError::OperationFailed(msg) => write!(f, "Operation failed: {}", msg),
+            Self::SendError(msg) => write!(f, "Send error: {msg}"),
+            Self::OperationFailed(msg) => write!(f, "Operation failed: {msg}"),
         }
     }
 }

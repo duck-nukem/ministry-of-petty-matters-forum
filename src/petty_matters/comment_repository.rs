@@ -64,6 +64,7 @@ pub struct CommentRepository {
 
 #[async_trait]
 impl Repository<CommentId, Comment> for CommentRepository {
+    #[allow(clippy::cast_possible_wrap, clippy::cast_sign_loss)]
     async fn list(&self, list_parameters: ListParameters) -> crate::error::Result<Page<Comment>> {
         let count = Entity::find()
             .count(&self.db)
@@ -95,6 +96,7 @@ impl Repository<CommentId, Comment> for CommentRepository {
         })
     }
 
+    #[allow(clippy::cast_possible_wrap)]
     async fn save(&self, entity: Comment) -> crate::error::Result<()> {
         let mut active_model = ActiveModel {
             id: Set(entity.id.0),
@@ -117,6 +119,7 @@ impl Repository<CommentId, Comment> for CommentRepository {
         Ok(())
     }
 
+    #[allow(clippy::cast_sign_loss)]
     async fn get_by_id(&self, id: &CommentId) -> crate::error::Result<Option<Comment>> {
         match Entity::find_by_id(id.0).one(&self.db).await {
             Ok(Some(record)) => Ok(Some(Comment {
@@ -129,8 +132,7 @@ impl Repository<CommentId, Comment> for CommentRepository {
                 creation_time: record.creation_time,
                 last_updated_time: record.last_updated_time,
             })),
-            Ok(None) => Ok(None),
-            Err(_) => Ok(None),
+            Ok(None) | Err(_) => Ok(None),
         }
     }
 

@@ -9,7 +9,7 @@ pub struct WriteQueue {
 }
 
 impl WriteQueue {
-    pub fn new(sender: Sender<WriteOperation>) -> Self {
+    pub const fn new(sender: Sender<WriteOperation>) -> Self {
         Self { sender }
     }
 }

@@ -10,6 +10,7 @@ pub struct InMemoryRepository<ID, Entity> {
     store: Arc<Mutex<HashMap<ID, Entity>>>,
 }
 
+#[allow(dead_code)]
 impl<ID, Entity> InMemoryRepository<ID, Entity>
 where
     ID: Eq + Hash + Clone,

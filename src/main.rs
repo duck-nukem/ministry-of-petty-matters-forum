@@ -1,6 +1,5 @@
 use crate::authn::views::auth_router;
 use crate::config::APP_CONFIG;
-use crate::persistence::in_memory_repository::InMemoryRepository;
 use crate::petty_matters::views::topics_router;
 use axum::response::Redirect;
 use axum::{routing::get, Router};
@@ -10,6 +9,7 @@ use std::time::Duration;
 use sea_orm::{ConnectOptions, Database, DatabaseConnection};
 use tokio::sync::mpsc::channel;
 use tower_http::services::ServeDir;
+use crate::petty_matters::comment_repository::CommentRepository;
 use crate::petty_matters::topic_repository::TopicRepository;
 use crate::queue::in_memory_queue::WriteQueue;
 use crate::queue::worker::start_write_worker;
@@ -40,7 +40,7 @@ async fn main() {
     let write_queue = Arc::new(WriteQueue::new(tx.clone()));
 
     let topic_repository = Arc::new(TopicRepository { db: db.clone() });
-    let comment_repository = Arc::new(InMemoryRepository::new());
+    let comment_repository = Arc::new(CommentRepository { db: db.clone() });
     tokio::spawn(start_write_worker(rx, topic_repository.clone(), comment_repository.clone()));
     let topic_service = Arc::new(TopicService::new(topic_repository, comment_repository, write_queue));
 

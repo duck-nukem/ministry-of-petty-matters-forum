@@ -30,8 +30,8 @@ impl Filterable for Model {
     fn get_field_value(&self, field: &str) -> Option<String> {
         match field {
             "id" => Some(self.id.clone().to_string()),
-            "title" => Some(self.title.clone().to_string()),
-            "created_by" => Some(self.created_by.clone().to_string()),
+            "title" => Some(self.title.clone()),
+            "created_by" => Some(self.created_by.clone()),
             _ => None,
         }
     }

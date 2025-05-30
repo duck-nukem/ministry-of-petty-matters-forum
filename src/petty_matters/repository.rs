@@ -27,7 +27,7 @@ pub enum Relation {}
 impl ActiveModelBehavior for ActiveModel {}
 
 impl Filterable for Model {
-    fn get_field_value(&self, field: &str) -> Option<String> {
+    fn get_field_value(&self, _field: &str) -> Option<String> {
         todo!()
     }
 }
@@ -49,12 +49,12 @@ impl Repository<TopicId, Topic> for TopicRepository {
             .count(&self.db)
             .await?;
         let data = Entity::find()
-            .offset(Some(list_parameters.page_number.0 as u64 * list_parameters.page_size.0 as u64))
-            .limit(Some(list_parameters.page_size.0 as u64))
+            .offset(Some(list_parameters.calculate_offset() as u64))
+            .limit(Some(list_parameters.calculate_limit() as u64))
             .order_by_desc(Column::CreationTime)
             .all(&self.db)
             .await?;
-
+        
         Ok(Page {
             items: data
                 .into_iter()
@@ -76,7 +76,7 @@ impl Repository<TopicId, Topic> for TopicRepository {
     }
 
     async fn save(&self, entity: Topic) -> crate::error::Result<()> {
-        let active_model = ActiveModel {
+        let mut active_model = ActiveModel {
             id: Set(entity.id.0),
             title: Set(entity.title),
             content: Set(entity.content),
@@ -86,7 +86,13 @@ impl Repository<TopicId, Topic> for TopicRepository {
             creation_time: Set(entity.creation_time),
             last_updated_time: Set(entity.last_updated_time),
         };
-        active_model.save(&self.db).await?;
+
+        if let Some(_id_already_exists) = &self.get_by_id(&entity.id).await? {
+            active_model.last_updated_time = Set(Option::from(Utc::now()));
+            Entity::update(active_model).exec(&self.db).await?;
+        } else {
+            Entity::insert(active_model).exec(&self.db).await?;
+        }
 
         Ok(())
     }

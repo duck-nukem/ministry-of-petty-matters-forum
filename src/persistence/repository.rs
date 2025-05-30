@@ -3,12 +3,13 @@ use crate::error::Result;
 use async_trait::async_trait;
 use serde::Deserialize;
 
-#[derive(Clone, Copy, Default, Deserialize, Eq, PartialEq)]
+#[derive(Clone, Debug, Copy, Default, Deserialize, Eq, PartialEq)]
 pub struct PageNumber(pub usize);
 
-#[derive(Clone, Copy, Default, Deserialize)]
+#[derive(Clone, Debug, Copy, Default, Deserialize)]
 pub struct PageSize(pub usize);
 
+#[derive(Debug)]
 pub struct ListParameters {
     pub page_size: PageSize,
     pub page_number: PageNumber,
@@ -22,6 +23,16 @@ impl Default for ListParameters {
             page_number: PageNumber(1),
             filters: None,
         }
+    }
+}
+
+impl ListParameters {
+    pub fn calculate_offset(&self) -> usize {
+        (self.page_number.0 - 1) * self.page_size.0
+    }
+    
+    pub fn calculate_limit(&self) -> usize {
+        self.page_size.0
     }
 }
 

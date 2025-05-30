@@ -7,7 +7,7 @@ use crate::authn::session::{User, Username};
 use crate::persistence::repository::HasId;
 use crate::persistence::repository::Filterable;
 
-#[derive(Clone, Deserialize, Eq, PartialEq, Hash)]
+#[derive(Clone, Debug, Deserialize, Eq, PartialEq, Hash)]
 pub struct CommentId(pub Uuid);
 
 impl Display for CommentId {
@@ -16,7 +16,7 @@ impl Display for CommentId {
     }
 }
 
-#[derive(Clone, Eq, PartialEq)]
+#[derive(Clone, Debug, Eq, PartialEq)]
 pub struct Comment {
     pub id: CommentId,
     pub topic_id: TopicId,

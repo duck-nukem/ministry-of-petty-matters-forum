@@ -11,6 +11,7 @@ pub async fn start_write_worker(
     comment_repository: Arc<dyn Repository<CommentId, Comment> + Send + Sync>,
 ) -> Result<(), QueueError> {
     while let Some(op) = receiver.recv().await {
+        println!("Received operation: {:?}", op);
         match op {
             WriteOperation::CreateTopic(topic) => {
                 topic_repository
@@ -26,5 +27,7 @@ pub async fn start_write_worker(
             }
         }
     }
+    println!("Receiver closed");
+
     Ok(())
 }

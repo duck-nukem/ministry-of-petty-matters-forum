@@ -3,6 +3,7 @@ use async_trait::async_trait;
 use crate::petty_matters::comment::Comment;
 use crate::petty_matters::topic::Topic;
 
+#[derive(Debug)]
 pub enum WriteOperation {
     CreateTopic(Topic),
     AddComment(Comment),

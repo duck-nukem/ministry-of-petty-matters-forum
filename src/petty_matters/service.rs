@@ -7,7 +7,7 @@ use crate::queue::base::{Queue, QueueError, WriteOperation};
 use std::collections::HashMap;
 use std::sync::Arc;
 
-pub struct TopicService<T, C, Q>
+pub struct PettyMattersService<T, C, Q>
 where
     T: Repository<TopicId, Topic> + Send + Sync,
     C: Repository<CommentId, Comment> + Send + Sync,
@@ -18,7 +18,7 @@ where
     pub write_queue: Arc<Q>,
 }
 
-impl<T, C, Q> TopicService<T, C, Q>
+impl<T, C, Q> PettyMattersService<T, C, Q>
 where
     T: Repository<TopicId, Topic> + Send + Sync,
     C: Repository<CommentId, Comment> + Send + Sync,
@@ -88,7 +88,7 @@ mod tests {
         let comment_repository = Arc::new(InMemoryRepository::new());
         let queue = StubQueue::new(topic_repository.clone(), comment_repository.clone());
         let topic_service =
-            TopicService::new(topic_repository, comment_repository, Arc::new(queue));
+            PettyMattersService::new(topic_repository, comment_repository, Arc::new(queue));
         let topic = Topic::default();
 
         topic_service
@@ -110,7 +110,7 @@ mod tests {
         let comment_repository = Arc::new(InMemoryRepository::new());
         let queue = StubQueue::new(topic_repository.clone(), comment_repository.clone());
         let topic_service =
-            TopicService::new(topic_repository, comment_repository, Arc::new(queue));
+            PettyMattersService::new(topic_repository, comment_repository, Arc::new(queue));
         let topic = Topic::default();
         topic_service
             .create_topic(topic.clone())
@@ -143,7 +143,7 @@ mod tests {
         let comment_repository = Arc::new(InMemoryRepository::new());
         let queue = StubQueue::new(topic_repository.clone(), comment_repository.clone());
         let topic_service =
-            TopicService::new(topic_repository, comment_repository, Arc::new(queue));
+            PettyMattersService::new(topic_repository, comment_repository, Arc::new(queue));
         let unrelated_topic = Topic::default();
         topic_service
             .create_topic(unrelated_topic.clone())

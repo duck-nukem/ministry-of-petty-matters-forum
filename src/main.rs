@@ -3,7 +3,7 @@ use crate::config::APP_CONFIG;
 use crate::petty_matters::views::topics_router;
 use axum::response::Redirect;
 use axum::{routing::get, Router};
-use petty_matters::service::TopicService;
+use petty_matters::service::PettyMattersService;
 use std::sync::Arc;
 use std::time::Duration;
 use sea_orm::{ConnectOptions, Database, DatabaseConnection};
@@ -42,7 +42,7 @@ async fn main() {
     let topic_repository = Arc::new(TopicRepository { db: db.clone() });
     let comment_repository = Arc::new(CommentRepository { db: db.clone() });
     tokio::spawn(start_write_worker(rx, topic_repository.clone(), comment_repository.clone()));
-    let topic_service = Arc::new(TopicService::new(topic_repository, comment_repository, write_queue));
+    let topic_service = Arc::new(PettyMattersService::new(topic_repository, comment_repository, write_queue));
 
     let app = Router::new()
         .route("/", get(|| async { Redirect::to(MAIN_ENTRY_POINT) }))

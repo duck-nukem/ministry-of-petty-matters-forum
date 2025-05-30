@@ -1,7 +1,7 @@
 use crate::authn::session::User;
 use crate::persistence::repository::{ListParameters, Page, PageNumber, PageSize, Repository};
 use crate::petty_matters::comment::{Comment, CommentId};
-use crate::petty_matters::service::TopicService;
+use crate::petty_matters::service::PettyMattersService;
 use crate::petty_matters::topic::{Topic, TopicId};
 use crate::queue::base::Queue;
 use crate::render_template;
@@ -61,7 +61,7 @@ struct Pagination {
 async fn list_petty_matters<T, C, Q>(
     user: User,
     nonce: Nonce,
-    State(service): State<Arc<TopicService<T, C, Q>>>,
+    State(service): State<Arc<PettyMattersService<T, C, Q>>>,
     pagination: Query<Pagination>,
 ) -> Result<HtmlResponse, StatusCode>
 where
@@ -93,7 +93,7 @@ async fn render_registration_form(nonce: Nonce, user: User) -> Result<HtmlRespon
 
 async fn register_petty_matter<T, C, Q>(
     user: User,
-    State(service): State<Arc<TopicService<T, C, Q>>>,
+    State(service): State<Arc<PettyMattersService<T, C, Q>>>,
     form: Form<PettyMattersRegistrationForm>,
 ) -> Result<Response, StatusCode>
 where
@@ -112,7 +112,7 @@ where
 async fn view_petty_matter<T, C, Q>(
     nonce: Nonce,
     Path(topic_id): Path<TopicId>,
-    State(service): State<Arc<TopicService<T, C, Q>>>,
+    State(service): State<Arc<PettyMattersService<T, C, Q>>>,
 ) -> Result<HtmlResponse, StatusCode>
 where
     T: Repository<TopicId, Topic> + Send + Sync,
@@ -148,7 +148,7 @@ where
 async fn add_comment<T, C, Q>(
     user: User,
     Path(topic_id): Path<TopicId>,
-    State(service): State<Arc<TopicService<T, C, Q>>>,
+    State(service): State<Arc<PettyMattersService<T, C, Q>>>,
     form: Form<CommentForm>,
 ) -> Result<impl IntoResponse, StatusCode>
 where
@@ -163,7 +163,7 @@ where
     Ok(Redirect::to(&format!("/petty-matters/{topic_id}")))
 }
 
-pub fn topics_router<T, C, Q>(service: Arc<TopicService<T, C, Q>>) -> Router
+pub fn topics_router<T, C, Q>(service: Arc<PettyMattersService<T, C, Q>>) -> Router
 where
     T: Repository<TopicId, Topic> + Send + Sync + 'static,
     C: Repository<CommentId, Comment> + Send + Sync + 'static,

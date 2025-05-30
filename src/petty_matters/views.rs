@@ -58,11 +58,18 @@ struct Pagination {
     page_size: Option<PageSize>,
 }
 
+#[derive(Clone, Deserialize)]
+struct Filter {
+    #[serde(flatten)]
+    filters: HashMap<String, String>,
+}
+
 async fn list_petty_matters<T, C, Q>(
     user: User,
     nonce: Nonce,
     State(service): State<Arc<PettyMattersService<T, C, Q>>>,
     pagination: Query<Pagination>,
+    filters: Query<Filter>,
 ) -> Result<HtmlResponse, StatusCode>
 where
     T: Repository<TopicId, Topic> + Send + Sync,
@@ -72,7 +79,7 @@ where
     let list_parameters = ListParameters {
         page_number: pagination.page.unwrap_or(PageNumber(1)),
         page_size: pagination.page_size.unwrap_or(PageSize(10)),
-        filters: None,
+        filters: Some(filters.filters.clone()),
     };
     let topics = match service.list_topics(list_parameters).await {
         Ok(topics) => topics,

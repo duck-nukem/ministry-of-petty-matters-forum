@@ -4,7 +4,7 @@ use crate::petty_matters::topic::{Topic, TopicId};
 use async_trait::async_trait;
 use chrono::Utc;
 use sea_orm::entity::prelude::*;
-use sea_orm::{DeriveEntityModel, QueryOrder, QuerySelect, Set};
+use sea_orm::{Condition, DeriveEntityModel, QueryOrder, QuerySelect, Set};
 use serde::{Deserialize, Serialize};
 
 #[derive(Clone, Debug, PartialEq, Eq, DeriveEntityModel, Serialize, Deserialize)]
@@ -27,8 +27,13 @@ pub enum Relation {}
 impl ActiveModelBehavior for ActiveModel {}
 
 impl Filterable for Model {
-    fn get_field_value(&self, _field: &str) -> Option<String> {
-        todo!()
+    fn get_field_value(&self, field: &str) -> Option<String> {
+        match field {
+            "id" => Some(self.id.clone().to_string()),
+            "title" => Some(self.title.clone().to_string()),
+            "created_by" => Some(self.created_by.clone().to_string()),
+            _ => None,
+        }
     }
 }
 
@@ -46,10 +51,24 @@ pub struct TopicRepository {
 impl Repository<TopicId, Topic> for TopicRepository {
     #[allow(clippy::cast_sign_loss)]
     async fn list(&self, list_parameters: ListParameters) -> crate::error::Result<Page<Topic>> {
-        let count = Entity::find()
+        let mut condition = Condition::all();
+        if let Some(filters) = &list_parameters.filters {
+            for (key, val) in filters {
+                match key.as_str() {
+                    "title" => condition = condition.add(Column::Title.like(val)),
+                    "content" => condition = condition.add(Column::Content.eq(val)),
+                    "created_by" => condition = condition.add(Column::CreatedBy.eq(val)),
+                    _ => {}
+                }
+            }
+        }
+
+        let filtered_base = Entity::find()
+            .filter(condition);
+        let count = filtered_base.clone()
             .count(&self.db)
             .await?;
-        let data = Entity::find()
+        let data = filtered_base
             .offset(Some(list_parameters.calculate_offset() as u64))
             .limit(Some(list_parameters.calculate_limit() as u64))
             .order_by_desc(Column::CreationTime)

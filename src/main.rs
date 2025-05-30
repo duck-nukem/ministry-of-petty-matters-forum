@@ -10,7 +10,7 @@ use std::time::Duration;
 use sea_orm::{ConnectOptions, Database, DatabaseConnection};
 use tokio::sync::mpsc::channel;
 use tower_http::services::ServeDir;
-use crate::petty_matters::repository::TopicRepository;
+use crate::petty_matters::topic_repository::TopicRepository;
 use crate::queue::in_memory_queue::WriteQueue;
 use crate::queue::worker::start_write_worker;
 

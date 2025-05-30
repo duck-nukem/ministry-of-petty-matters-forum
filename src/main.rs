@@ -6,7 +6,8 @@ use axum::response::Redirect;
 use axum::{routing::get, Router};
 use petty_matters::service::TopicService;
 use std::sync::Arc;
-use sea_orm::{Database, DatabaseConnection};
+use std::time::Duration;
+use sea_orm::{ConnectOptions, Database, DatabaseConnection};
 use tokio::sync::mpsc::channel;
 use tower_http::services::ServeDir;
 use crate::petty_matters::repository::TopicRepository;
@@ -28,8 +29,14 @@ static MAIN_ENTRY_POINT: &str = "/petty-matters";
 #[tokio::main]
 #[allow(clippy::expect_used)]
 async fn main() {
-    let db: DatabaseConnection = Database::connect(&APP_CONFIG.database_url).await.expect("Failed to connect to the database");
-    let (tx, rx) = channel(100);
+    let mut connection_options = ConnectOptions::new(APP_CONFIG.database_url.clone());
+    connection_options.max_connections(200)
+        .min_connections(20)
+        .connect_timeout(Duration::from_secs(5))
+        .idle_timeout(Duration::from_secs(30))
+        .sqlx_logging(false);
+
+    let db: DatabaseConnection = Database::connect(connection_options).await.expect("DB connect failed");    let (tx, rx) = channel(100);
     let write_queue = Arc::new(WriteQueue::new(tx.clone()));
 
     let topic_repository = Arc::new(TopicRepository { db: db.clone() });

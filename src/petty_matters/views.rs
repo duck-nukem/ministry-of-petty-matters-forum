@@ -57,7 +57,7 @@ async fn list_petty_matters<T, C, Q>(
     user: User,
     nonce: Nonce,
     State(service): State<Arc<PettyMattersService<T, C, Q>>>,
-    pagination: Query<Pagination>,
+    page_filters: Query<PageFilters>,
 ) -> Result<HtmlResponse, StatusCode>
 where
     T: Repository<TopicId, Topic> + Send + Sync,

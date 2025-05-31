@@ -37,7 +37,9 @@ impl ListParameters {
 }
 
 pub trait Filterable {
-    fn get_field_value(&self, field: &str) -> Option<String>;
+    type Output;
+    
+    fn get_field_value(&self, field: &str) -> Self::Output;
 }
 
 #[derive(Default)]

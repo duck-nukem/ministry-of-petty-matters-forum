@@ -27,7 +27,9 @@ pub enum Relation {}
 impl ActiveModelBehavior for ActiveModel {}
 
 impl Filterable for Model {
-    fn get_field_value(&self, field: &str) -> Option<String> {
+    type Output = Option<String>;
+
+    fn get_field_value(&self, field: &str) -> Self::Output {
         match field {
             "id" => Some(self.id.clone().to_string()),
             "title" => Some(self.title.clone()),

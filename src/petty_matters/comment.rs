@@ -51,7 +51,9 @@ impl HasId<CommentId> for Comment {
 }
 
 impl Filterable for Comment {
-    fn get_field_value(&self, field: &str) -> Option<String> {
+    type Output = Option<String>;
+    
+    fn get_field_value(&self, field: &str) -> Self::Output {
         match field {
             "id" => Some(self.id.clone().to_string()),
             "topic_id" => Some(self.topic_id.clone().to_string()),

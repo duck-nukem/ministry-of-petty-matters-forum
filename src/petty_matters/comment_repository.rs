@@ -47,7 +47,9 @@ impl Related<super::topic_repository::Entity> for Entity {
 impl ActiveModelBehavior for ActiveModel {}
 
 impl Filterable for Model {
-    fn get_field_value(&self, _field: &str) -> Option<String> {
+    type Output = String;
+    
+    fn get_field_value(&self, _field: &str) -> Self::Output {
         todo!()
     }
 }

@@ -26,7 +26,7 @@ where
 impl<ID, Entity> Repository<ID, Entity> for InMemoryRepository<ID, Entity>
 where
     ID: Send + Sync + Eq + Hash + Clone,
-    Entity: Send + Sync + Clone + HasId<ID> + Filterable,
+    Entity: Send + Sync + Clone + HasId<ID> + Filterable<Output = Option<String>>,
 {
     #[allow(clippy::significant_drop_tightening)]
     async fn list(&self, list_parameters: ListParameters) -> Result<Page<Entity>> {
@@ -93,7 +93,9 @@ mod tests {
     }
 
     impl Filterable for StubEntity {
-        fn get_field_value(&self, _field: &str) -> Option<String> {
+        type Output = Option<String>;
+        
+        fn get_field_value(&self, _field: &str) -> Self::Output {
             None
         }
     }

@@ -8,6 +8,7 @@ enum Counter {
     Count,
 }
 
+#[allow(clippy::cast_sign_loss)]
 pub async fn fetch_filtered_rows<T, R>(
     db: &DatabaseConnection,
     condition: Condition,

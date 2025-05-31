@@ -64,7 +64,7 @@ where
     C: Repository<CommentId, Comment> + Send + Sync,
     Q: Queue + Send + Sync,
 {
-    let list_parameters = ListParameters::from_query_params(page_filters);
+    let list_parameters = ListParameters::from_query_params(&page_filters);
     let topics = match service.list_topics(list_parameters).await {
         Ok(topics) => topics,
         Err(e) => return show_error_page(e),

@@ -9,7 +9,7 @@ macro_rules! render_template {
     ($template:expr) => {
         match $template.render() {
             Ok(t) => t,
-            Err(e) => return crate::views::templates::show_error_page(Box::new(e)),
+            Err(e) => return $crate::views::templates::show_error_page(Box::new(e)),
         }
     };
 }

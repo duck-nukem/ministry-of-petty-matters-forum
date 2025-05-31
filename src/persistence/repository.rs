@@ -37,7 +37,7 @@ impl ListParameters {
         self.page_size.0
     }
     
-    pub fn from_query_params(page_filters: Query<PageFilters>) -> Self {
+    pub fn from_query_params(page_filters: &Query<PageFilters>) -> Self {
         Self {
             page_size: page_filters.page_size.unwrap_or(PageSize(20)),
             page_number: page_filters.page.unwrap_or(PageNumber(1)),

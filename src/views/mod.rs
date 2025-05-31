@@ -1,2 +1,2 @@
 pub mod templates;
-pub(crate) mod pagination;
+pub mod pagination;

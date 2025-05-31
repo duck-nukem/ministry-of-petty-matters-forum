@@ -1,7 +1,9 @@
 use std::collections::HashMap;
 use crate::error::Result;
 use async_trait::async_trait;
+use axum::extract::Query;
 use serde::Deserialize;
+use crate::views::pagination::PageFilters;
 
 #[derive(Clone, Debug, Copy, Default, Deserialize, Eq, PartialEq)]
 pub struct PageNumber(pub usize);
@@ -33,6 +35,14 @@ impl ListParameters {
     
     pub const fn calculate_limit(&self) -> usize {
         self.page_size.0
+    }
+    
+    pub fn from_query_params(page_filters: Query<PageFilters>) -> Self {
+        Self {
+            page_size: page_filters.page_size.unwrap_or(PageSize(20)),
+            page_number: page_filters.page.unwrap_or(PageNumber(1)),
+            filters: Some(page_filters.filters.clone()),
+        }
     }
 }
 

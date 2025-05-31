@@ -1,4 +1,4 @@
-use sea_orm::{EntityOrSelect, FromQueryResult, QueryFilter, QuerySelect};
+use sea_orm::{EntityOrSelect, FromQueryResult, Order, QueryFilter, QueryOrder, QuerySelect};
 use sea_orm::{Condition, DatabaseConnection, DeriveColumn, EntityTrait, EnumIter, Select};
 use sea_orm::sea_query::Expr;
 use crate::persistence::repository::ListParameters;
@@ -12,6 +12,7 @@ pub async fn fetch_filtered_rows<T, R>(
     db: &DatabaseConnection,
     condition: Condition,
     list_parameters: &ListParameters,
+    ordering: (T::Column, Order),
     select: Select<T>,
 ) -> crate::error::Result<(u64, Vec<R>)>
 where
@@ -30,6 +31,7 @@ where
     let data = resulting_rows
         .offset(Some(list_parameters.calculate_offset() as u64))
         .limit(Some(list_parameters.calculate_limit() as u64))
+        .order_by(ordering.0, ordering.1)
         .all(db)
         .await?;
     

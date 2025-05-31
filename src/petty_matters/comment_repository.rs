@@ -4,7 +4,7 @@ use crate::petty_matters::comment::{Comment, CommentId};
 use async_trait::async_trait;
 use chrono::Utc;
 use sea_orm::entity::prelude::*;
-use sea_orm::{Condition, DeriveEntityModel, Set};
+use sea_orm::{Condition, DeriveEntityModel, Order, Set};
 use serde::{Deserialize, Serialize};
 use crate::persistence::rdbms::fetch_filtered_rows;
 
@@ -75,6 +75,7 @@ impl Repository<CommentId, Comment> for CommentRepository {
             &self.db,
             condition.clone(),
             &list_parameters,
+            (Column::CreationTime, Order::Desc),
             Entity::find(),
         ).await?;
         

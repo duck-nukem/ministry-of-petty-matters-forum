@@ -1,6 +1,10 @@
+use askama::Template;
 use axum::response::{Html, IntoResponse, Response};
 use axum::http::{header, StatusCode};
+use crate::error::AnyError;
+use crate::templates::Nonce;
 use crate::time::Seconds;
+use crate::{error, render_template};
 
 pub struct HtmlResponse {
     pub response: Html<String>,
@@ -42,4 +46,40 @@ impl IntoResponse for HtmlResponse {
         }
         res
     }
+}
+
+#[derive(Template)]
+#[template(path = "errors/5xx.html")]
+pub struct InternalServerErrorPage {
+    nonce: Nonce,
+}
+
+#[derive(Template)]
+#[template(path = "errors/404.html")]
+pub struct NotFoundErrorPage {
+    nonce: Nonce,
+}
+
+pub fn show_error_page<E>(error: E) -> Result<HtmlResponse, StatusCode>
+where
+    E: Into<AnyError>,
+{
+    error::notify_maintainers_on_error(&error.into());
+    let response = render_template!(InternalServerErrorPage { nonce: Nonce::new() });
+
+    Ok(HtmlResponse {
+        response: Html(response),
+        status_code: Some(StatusCode::INTERNAL_SERVER_ERROR),
+        max_age: None,
+    })
+}
+
+pub fn show_not_found_page() -> Result<HtmlResponse, StatusCode> {
+    let response = render_template!(NotFoundErrorPage { nonce: Nonce::new() });
+
+    Ok(HtmlResponse {
+        response: Html(response),
+        status_code: Some(StatusCode::NOT_FOUND),
+        max_age: Some(Seconds(60)),
+    })
 }

@@ -7,7 +7,6 @@ use crate::queue::base::Queue;
 use crate::render_template;
 use crate::templates::{filters, Nonce};
 use crate::time::Seconds;
-use crate::view::{show_error_page, show_not_found_page};
 use askama::Template;
 use axum::extract::{Path, Query, State};
 use axum::http::StatusCode;
@@ -17,7 +16,7 @@ use axum::{Form, Router};
 use serde::Deserialize;
 use std::collections::HashMap;
 use std::sync::Arc;
-use crate::views::templates::HtmlResponse;
+use crate::views::templates::{show_error_page, show_not_found_page, HtmlResponse};
 
 #[derive(Template)]
 #[template(path = "petty_matters/list.html")]

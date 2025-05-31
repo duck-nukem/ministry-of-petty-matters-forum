@@ -1,15 +1,22 @@
-use std::fmt::{Display, Formatter};
 use axum::extract::FromRequestParts;
 use axum::http::request::Parts;
 use axum::http::StatusCode;
+use std::fmt::{Display, Formatter};
 use uuid::Uuid;
+
+#[macro_export]
+macro_rules! render_template {
+    ($template:expr) => {
+        match $template.render() {
+            Ok(t) => t,
+            Err(e) => return crate::views::templates::show_error_page(Box::new(e)),
+        }
+    };
+}
 
 pub mod filters {
     #[allow(clippy::unnecessary_wraps)]
-    pub fn markdown<T: std::fmt::Display>(
-        s: T,
-        _: &dyn askama::Values,
-    ) -> askama::Result<String> {
+    pub fn markdown<T: std::fmt::Display>(s: T, _: &dyn askama::Values) -> askama::Result<String> {
         let text = &s.to_string();
         let parser = pulldown_cmark::Parser::new_ext(text, pulldown_cmark::Options::all());
 

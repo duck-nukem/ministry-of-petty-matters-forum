@@ -21,7 +21,6 @@ mod persistence;
 mod petty_matters;
 mod templates;
 mod time;
-mod view;
 mod queue;
 mod views;
 

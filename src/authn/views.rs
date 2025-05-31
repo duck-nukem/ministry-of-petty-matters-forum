@@ -4,7 +4,7 @@ use crate::authn::session::{User, Username};
 use crate::error::AnyError;
 use crate::render_template;
 use crate::views::templates::HtmlResponse;
-use crate::view::{notify_maintainers_on_error, show_error_page};
+use crate::error::notify_maintainers_on_error;
 use askama::Template;
 use axum::http::header::SET_COOKIE;
 use axum::http::{HeaderValue, StatusCode};

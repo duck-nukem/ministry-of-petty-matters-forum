@@ -3,7 +3,7 @@ use crate::authn::oauth::token::validate_token;
 use crate::authn::session::{User, Username};
 use crate::error::AnyError;
 use crate::render_template;
-use crate::view::HtmlResponse;
+use crate::views::templates::HtmlResponse;
 use crate::view::{notify_maintainers_on_error, show_error_page};
 use askama::Template;
 use axum::http::header::SET_COOKIE;

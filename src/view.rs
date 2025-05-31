@@ -1,51 +1,10 @@
 use crate::error::AnyError;
 use crate::time::Seconds;
 use askama::Template;
-use axum::http::{header, StatusCode};
-use axum::response::{Html, IntoResponse, Response};
+use axum::http::StatusCode;
+use axum::response::Html;
 use crate::templates::Nonce;
-
-pub struct HtmlResponse {
-    pub response: Html<String>,
-    pub status_code: Option<StatusCode>,
-    pub max_age: Option<Seconds>,
-}
-
-impl HtmlResponse {
-    pub const fn from_string(response: String) -> Self {
-        Self {
-            response: Html(response),
-            status_code: Some(StatusCode::OK),
-            max_age: None,
-        }
-    }
-
-    pub const fn cached(response: String, cache_for: Seconds) -> Self {
-        Self {
-            response: Html(response),
-            status_code: Some(StatusCode::OK),
-            max_age: Some(cache_for),
-        }
-    }
-}
-
-impl IntoResponse for HtmlResponse {
-    fn into_response(self) -> Response {
-        let response_with_status = match self.status_code {
-            Some(status_code) => (status_code, self.response),
-            None => (StatusCode::OK, self.response),
-        };
-        let mut res = response_with_status.into_response();
-        if let Some(seconds) = self.max_age {
-            res.headers_mut().insert(
-                header::CACHE_CONTROL,
-                header::HeaderValue::from_str(&format!("max-age={}", seconds.0))
-                    .unwrap_or(header::HeaderValue::from_static("max-age=60")),
-            );
-        }
-        res
-    }
-}
+use crate::views::templates::HtmlResponse;
 
 #[macro_export]
 macro_rules! render_template {

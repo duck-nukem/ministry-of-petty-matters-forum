@@ -4,8 +4,9 @@ use crate::petty_matters::topic::{Topic, TopicId};
 use async_trait::async_trait;
 use chrono::Utc;
 use sea_orm::entity::prelude::*;
-use sea_orm::{Condition, DeriveEntityModel, QueryOrder, QuerySelect, Set};
+use sea_orm::{Condition, DeriveEntityModel, Set};
 use serde::{Deserialize, Serialize};
+use crate::persistence::rdbms::fetch_filtered_rows;
 
 #[derive(Clone, Debug, PartialEq, Eq, DeriveEntityModel, Serialize, Deserialize)]
 #[sea_orm(table_name = "topics")]
@@ -64,18 +65,12 @@ impl Repository<TopicId, Topic> for TopicRepository {
                 }
             }
         }
-
-        let filtered_base = Entity::find()
-            .filter(condition);
-        let count = filtered_base.clone()
-            .count(&self.db)
-            .await?;
-        let data = filtered_base
-            .offset(Some(list_parameters.calculate_offset() as u64))
-            .limit(Some(list_parameters.calculate_limit() as u64))
-            .order_by_desc(Column::CreationTime)
-            .all(&self.db)
-            .await?;
+        
+        let (count, data) = fetch_filtered_rows(
+            &self.db, 
+            condition.clone(), 
+            Entity::find(),
+        ).await?;
         
         Ok(Page {
             items: data

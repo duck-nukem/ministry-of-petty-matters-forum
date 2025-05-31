@@ -7,7 +7,7 @@ use crate::queue::base::Queue;
 use crate::render_template;
 use crate::templates::{filters, Nonce};
 use crate::time::Seconds;
-use crate::views::pagination::Pagination;
+use crate::views::pagination::PageFilters;
 use crate::views::templates::{show_error_page, show_not_found_page, HtmlResponse};
 use askama::Template;
 use axum::extract::{Path, Query, State};
@@ -65,9 +65,9 @@ where
     Q: Queue + Send + Sync,
 {
     let list_parameters = ListParameters {
-        page_number: pagination.page.unwrap_or(PageNumber(1)),
-        page_size: pagination.page_size.unwrap_or(PageSize(10)),
-        filters: Some(pagination.filters.clone()),
+        page_number: page_filters.page.unwrap_or(PageNumber(1)),
+        page_size: page_filters.page_size.unwrap_or(PageSize(10)),
+        filters: Some(page_filters.filters.clone()),
     };
     let topics = match service.list_topics(list_parameters).await {
         Ok(topics) => topics,

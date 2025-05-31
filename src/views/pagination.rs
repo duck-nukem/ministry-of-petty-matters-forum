@@ -12,7 +12,7 @@ enum Ordering {
 }
 
 #[derive(Clone, Deserialize, Debug)]
-pub struct Pagination {
+pub struct PageFilters {
     pub page: Option<PageNumber>,
     pub page_size: Option<PageSize>,
     pub order_by: Option<String>,

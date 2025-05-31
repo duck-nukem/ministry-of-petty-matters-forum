@@ -7,6 +7,8 @@ use crate::queue::base::Queue;
 use crate::render_template;
 use crate::templates::{filters, Nonce};
 use crate::time::Seconds;
+use crate::views::pagination::Pagination;
+use crate::views::templates::{show_error_page, show_not_found_page, HtmlResponse};
 use askama::Template;
 use axum::extract::{Path, Query, State};
 use axum::http::StatusCode;
@@ -16,7 +18,6 @@ use axum::{Form, Router};
 use serde::Deserialize;
 use std::collections::HashMap;
 use std::sync::Arc;
-use crate::views::templates::{show_error_page, show_not_found_page, HtmlResponse};
 
 #[derive(Template)]
 #[template(path = "petty_matters/list.html")]
@@ -50,26 +51,6 @@ struct PettyMattersRegistrationForm {
 #[derive(Deserialize)]
 struct CommentForm {
     content: String,
-}
-
-#[derive(Clone, Debug, Deserialize)]
-#[serde(rename_all = "lowercase")]
-enum Ordering {
-    #[serde(alias = "asc")]
-    Ascending,
-    #[serde(alias = "desc")]
-    Descending,
-}
-
-
-#[derive(Clone, Deserialize, Debug)]
-struct Pagination {  // TODO: this has to move
-    page: Option<PageNumber>,
-    page_size: Option<PageSize>,
-    order_by: Option<String>,
-    ordering: Option<Ordering>,
-    #[serde(flatten)]
-    filters: HashMap<String, String>,
 }
 
 async fn list_petty_matters<T, C, Q>(

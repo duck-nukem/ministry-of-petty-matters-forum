@@ -52,10 +52,22 @@ struct CommentForm {
     content: String,
 }
 
-#[derive(Clone, Deserialize)]
-struct Pagination {
+#[derive(Clone, Debug, Deserialize)]
+#[serde(rename_all = "lowercase")]
+enum Ordering {
+    #[serde(alias = "asc")]
+    Ascending,
+    #[serde(alias = "desc")]
+    Descending,
+}
+
+
+#[derive(Clone, Deserialize, Debug)]
+struct Pagination {  // TODO: this has to move
     page: Option<PageNumber>,
     page_size: Option<PageSize>,
+    order_by: Option<String>,
+    ordering: Option<Ordering>,
     #[serde(flatten)]
     filters: HashMap<String, String>,
 }

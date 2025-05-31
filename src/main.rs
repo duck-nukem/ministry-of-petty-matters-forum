@@ -23,6 +23,7 @@ mod templates;
 mod time;
 mod view;
 mod queue;
+mod views;
 
 static MAIN_ENTRY_POINT: &str = "/petty-matters";
 

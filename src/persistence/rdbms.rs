@@ -1,6 +1,7 @@
 use sea_orm::{EntityOrSelect, FromQueryResult, QueryFilter, QuerySelect};
 use sea_orm::{Condition, DatabaseConnection, DeriveColumn, EntityTrait, EnumIter, Select};
 use sea_orm::sea_query::Expr;
+use crate::persistence::repository::ListParameters;
 
 #[derive(Copy, Clone, Debug, EnumIter, DeriveColumn)]
 enum Counter {
@@ -9,7 +10,8 @@ enum Counter {
 
 pub async fn fetch_filtered_rows<T, R>(
     db: &DatabaseConnection,
-    condition: Condition, 
+    condition: Condition,
+    list_parameters: &ListParameters,
     select: Select<T>,
 ) -> crate::error::Result<(u64, Vec<R>)>
 where
@@ -26,6 +28,8 @@ where
         .await?;
     let final_count: u64 = count.unwrap_or_default();
     let data = resulting_rows
+        .offset(Some(list_parameters.calculate_offset() as u64))
+        .limit(Some(list_parameters.calculate_limit() as u64))
         .all(db)
         .await?;
     

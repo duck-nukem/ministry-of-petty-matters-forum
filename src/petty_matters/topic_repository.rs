@@ -68,7 +68,8 @@ impl Repository<TopicId, Topic> for TopicRepository {
         
         let (count, data) = fetch_filtered_rows(
             &self.db, 
-            condition.clone(), 
+            condition.clone(),
+            &list_parameters,
             Entity::find(),
         ).await?;
         

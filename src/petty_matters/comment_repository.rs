@@ -69,11 +69,12 @@ pub struct CommentRepository {
 impl Repository<CommentId, Comment> for CommentRepository {
     #[allow(clippy::cast_possible_wrap, clippy::cast_sign_loss)]
     async fn list(&self, list_parameters: ListParameters) -> crate::error::Result<Page<Comment>> {
-        let mut condition = Condition::all();
+        let condition = Condition::all();
         
         let (count, data) = fetch_filtered_rows(
             &self.db,
             condition.clone(),
+            &list_parameters,
             Entity::find(),
         ).await?;
         

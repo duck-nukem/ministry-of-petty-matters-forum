@@ -64,7 +64,7 @@ impl ModelDatabaseInterface<Entity, Topic> for Entity {
         }
     }
 
-    fn from_record(record: Model) -> Topic {
+    fn model_from_record(record: Model) -> Topic {
         Topic {
             id: TopicId(record.id),
             title: record.title,
@@ -112,7 +112,7 @@ where
         Ok(Page {
             items: data
                 .into_iter()
-                .map(E::from_record)
+                .map(E::model_from_record)
                 .collect(),
             size: list_parameters.page_size,
             current_page_number: list_parameters.page_number,
@@ -145,7 +145,7 @@ where
     #[allow(clippy::cast_sign_loss)]
     async fn get_by_id(&self, id: &TopicId) -> crate::error::Result<Option<Topic>> {
         match Entity::find_by_id(id.0).one(&self.db).await {
-            Ok(Some(record)) => Ok(Some(E::from_record(record))),
+            Ok(Some(record)) => Ok(Some(E::model_from_record(record))),
             Ok(None) | Err(_) => Ok(None),
         }
     }

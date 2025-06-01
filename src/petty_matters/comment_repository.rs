@@ -82,7 +82,7 @@ impl ModelDatabaseInterface<Entity, Comment> for Entity {
         }
     }
 
-    fn from_record(record: Model) -> Comment {
+    fn model_from_record(record: Model) -> Comment {
         Comment {
             id: CommentId(record.id),
             topic_id: super::topic::TopicId(record.topic_id),
@@ -129,7 +129,7 @@ where
         Ok(Page {
             items: data
                 .into_iter()
-                .map(E::from_record)
+                .map(E::model_from_record)
                 .collect(),
             size: list_parameters.page_size,
             current_page_number: list_parameters.page_number,
@@ -162,7 +162,7 @@ where
     #[allow(clippy::cast_sign_loss)]
     async fn get_by_id(&self, id: &CommentId) -> crate::error::Result<Option<Comment>> {
         match Entity::find_by_id(id.0).one(&self.db).await {
-            Ok(Some(record)) => Ok(Some(E::from_record(record))),
+            Ok(Some(record)) => Ok(Some(E::model_from_record(record))),
             Ok(None) | Err(_) => Ok(None),
         }
     }

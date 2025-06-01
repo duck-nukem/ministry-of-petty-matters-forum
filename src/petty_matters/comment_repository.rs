@@ -122,7 +122,7 @@ where
 
     #[allow(clippy::cast_possible_wrap)]
     async fn save(&self, entity: Comment) -> crate::error::Result<()> {
-        let mut active_model = ActiveModel {
+        let active_model = ActiveModel {
             id: Set(entity.id.0),
             topic_id: Set(entity.topic_id.0),
             content: Set(entity.content),
@@ -130,11 +130,10 @@ where
             downvotes_count: Set(entity.downvotes_count as i32),
             created_by: Set(entity.created_by.to_string()),
             creation_time: Set(entity.creation_time),
-            last_updated_time: Set(entity.last_updated_time),
+            last_updated_time: Set(Option::from(Utc::now())),
         };
 
         if let Some(_id_already_exists) = &self.get_by_id(&entity.id).await? {
-            active_model.last_updated_time = Set(Option::from(Utc::now()));
             Entity::update(active_model).exec(&self.db).await?;
         } else {
             Entity::insert(active_model).exec(&self.db).await?;

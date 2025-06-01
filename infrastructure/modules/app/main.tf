@@ -9,10 +9,28 @@ resource "digitalocean_app" "app_platform" {
       zone = var.domain_name
     }
 
-    database {
-      name       = "${var.label}-db"
-      engine     = "PG"
-      production = var.label == "production"
+    job {
+      name = "migrate"
+
+      kind        = "POST_DEPLOY"
+      run_command = "sea-orm-cli migrate up -u $DATABASE_URL"
+
+      env {
+        key   = "DATABASE_URL"
+        value = digitalocean_database_cluster.main.uri
+        scope = "RUN_AND_BUILD_TIME"
+        type  = "SECRET"
+      }
+
+      image {
+        registry_type = var.registry_type
+        repository    = var.docker_image_name
+        tag           = var.docker_image_tag
+
+        deploy_on_push {
+          enabled = true
+        }
+      }
     }
 
     service {
@@ -30,8 +48,8 @@ resource "digitalocean_app" "app_platform" {
 
       env {
         key   = "DATABASE_URL"
-        value = "FILL_IN_MANUALLY" # not exposed through Terraform
-        scope = "RUN_TIME"
+        value = digitalocean_database_cluster.main.uri
+        scope = "RUN_AND_BUILD_TIME"
         type  = "SECRET"
       }
 

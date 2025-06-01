@@ -2,7 +2,7 @@ module "petty_matters_app" {
   source = "./modules/app"
 
   label        = "production"
-  region       = "fra"
+  region       = "fra1"
   service_name = "petty-matters-forum"
   domain_name  = "ministryofpettymatters.com"
 

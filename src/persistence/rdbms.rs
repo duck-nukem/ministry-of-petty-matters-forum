@@ -3,6 +3,10 @@ use sea_orm::{Condition, DatabaseConnection, DeriveColumn, EntityTrait, EnumIter
 use sea_orm::sea_query::Expr;
 use crate::persistence::repository::ListParameters;
 
+pub trait RecordFilter {
+    fn from_params(list_parameters: &ListParameters) -> Condition;
+}
+
 #[derive(Copy, Clone, Debug, EnumIter, DeriveColumn)]
 enum Counter {
     Count,

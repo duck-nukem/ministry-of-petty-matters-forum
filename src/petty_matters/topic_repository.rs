@@ -1,4 +1,5 @@
 use crate::authn::session::Username;
+use crate::persistence::rdbms::{fetch_filtered_rows, RecordFilter};
 use crate::persistence::repository::{HasId, ListParameters, Page, Repository};
 use crate::petty_matters::topic::{Topic, TopicId};
 use async_trait::async_trait;
@@ -6,7 +7,6 @@ use chrono::Utc;
 use sea_orm::entity::prelude::*;
 use sea_orm::{Condition, DeriveEntityModel, Order, Set};
 use serde::{Deserialize, Serialize};
-use crate::persistence::rdbms::fetch_filtered_rows;
 
 #[derive(Clone, Debug, PartialEq, Eq, DeriveEntityModel, Serialize, Deserialize)]
 #[sea_orm(table_name = "topics")]
@@ -33,14 +33,8 @@ impl HasId<Uuid> for Model {
     }
 }
 
-pub struct TopicRepository {
-    pub db: DatabaseConnection,
-}
-
-#[async_trait]
-impl Repository<TopicId, Topic> for TopicRepository {
-    #[allow(clippy::cast_sign_loss)]
-    async fn list(&self, list_parameters: ListParameters) -> crate::error::Result<Page<Topic>> {
+impl RecordFilter for Entity {
+    fn from_params(list_parameters: &ListParameters) -> Condition {
         let mut condition = Condition::all();
         if let Some(filters) = &list_parameters.filters {
             for (key, val) in filters {
@@ -52,15 +46,43 @@ impl Repository<TopicId, Topic> for TopicRepository {
                 }
             }
         }
-        
+
+        condition
+    }
+}
+
+pub struct TopicRepository<T> {
+    pub db: DatabaseConnection,
+    _marker: std::marker::PhantomData<T>,
+}
+
+impl<T> TopicRepository<T> {
+    pub fn new(db: DatabaseConnection) -> Self {
+        Self {
+            db,
+            _marker: std::marker::PhantomData,
+        }
+    }
+}
+
+#[async_trait]
+impl<E> Repository<TopicId, Topic> for TopicRepository<E>
+where
+    E: Send + Sync + EntityTrait<Column = Column, Model = Model> + RecordFilter,
+    <E as EntityTrait>::Model: Send + Sync,
+{
+    #[allow(clippy::cast_sign_loss)]
+    async fn list(&self, list_parameters: ListParameters) -> crate::error::Result<Page<Topic>> {
+        let condition = Entity::from_params(&list_parameters);
         let (count, data) = fetch_filtered_rows(
-            &self.db, 
+            &self.db,
             condition.clone(),
             &list_parameters,
             (Column::CreationTime, Order::Desc),
             Entity::find(),
-        ).await?;
-        
+        )
+        .await?;
+
         Ok(Page {
             items: data
                 .into_iter()

@@ -9,6 +9,12 @@ resource "digitalocean_app" "app_platform" {
       zone = var.domain_name
     }
 
+    database {
+      name       = "${var.label}-db"
+      engine     = "PG"
+      production = var.label == "production"
+    }
+
     service {
       name               = var.service_name
       instance_count     = var.instance_count
@@ -17,8 +23,16 @@ resource "digitalocean_app" "app_platform" {
       http_port = 3000
 
       env {
-        key = "PUBLIC_ROOT_URL"
+        key   = "PUBLIC_ROOT_URL"
         value = "https://production-hciwx.ondigitalocean.app"
+        scope = "RUN_TIME"
+      }
+
+      env {
+        key   = "DATABASE_URL"
+        value = "FILL_IN_MANUALLY" # not exposed through Terraform
+        scope = "RUN_TIME"
+        type  = "SECRET"
       }
 
       image {

@@ -3,8 +3,9 @@ use sea_orm::{Condition, DatabaseConnection, DeriveColumn, EntityTrait, EnumIter
 use sea_orm::sea_query::Expr;
 use crate::persistence::repository::ListParameters;
 
-pub trait RecordFilter {
-    fn from_params(list_parameters: &ListParameters) -> Condition;
+pub trait ModelDatabaseInterface<E: EntityTrait> {
+    fn filter_from_params(list_parameters: &ListParameters) -> Condition;
+    fn order_by_from_params(list_parameters: &ListParameters) -> (E::Column, Order);
 }
 
 #[derive(Copy, Clone, Debug, EnumIter, DeriveColumn)]

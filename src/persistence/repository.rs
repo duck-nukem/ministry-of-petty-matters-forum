@@ -3,7 +3,7 @@ use crate::error::Result;
 use async_trait::async_trait;
 use axum::extract::Query;
 use serde::Deserialize;
-use crate::views::pagination::PageFilters;
+use crate::views::pagination::{Ordering, PageFilters};
 
 #[derive(Clone, Debug, Copy, Default, Deserialize, Eq, PartialEq)]
 pub struct PageNumber(pub usize);
@@ -15,7 +15,9 @@ pub struct PageSize(pub usize);
 pub struct ListParameters {
     pub page_size: PageSize,
     pub page_number: PageNumber,
-    pub filters: Option<HashMap<String, String>>
+    pub order_by: Option<String>,
+    pub ordering: Option<Ordering>,
+    pub filters: Option<HashMap<String, String>>,
 }
 
 impl Default for ListParameters {
@@ -23,7 +25,9 @@ impl Default for ListParameters {
         Self {
             page_size: PageSize(20),
             page_number: PageNumber(1),
-            filters: None,
+            filters: Default::default(),
+            order_by: Default::default(),
+            ordering: Default::default(),
         }
     }
 }
@@ -42,6 +46,8 @@ impl ListParameters {
             page_size: page_filters.page_size.unwrap_or(PageSize(20)),
             page_number: page_filters.page.unwrap_or(PageNumber(1)),
             filters: Some(page_filters.filters.clone()),
+            order_by: page_filters.order_by.clone(),
+            ordering: page_filters.ordering.clone(),
         }
     }
 }

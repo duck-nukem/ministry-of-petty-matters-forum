@@ -165,6 +165,8 @@ mod tests {
             page_number: PageNumber(1),
             page_size: PageSize(2),
             filters: None,
+            order_by: None,
+            ordering: None,
         };
         let page = repository
             .list(list_parameters)

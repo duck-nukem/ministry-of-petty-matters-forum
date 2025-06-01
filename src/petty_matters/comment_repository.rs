@@ -6,7 +6,7 @@ use chrono::Utc;
 use sea_orm::entity::prelude::*;
 use sea_orm::{Condition, DeriveEntityModel, Order, Set};
 use serde::{Deserialize, Serialize};
-use crate::persistence::rdbms::{fetch_filtered_rows, RecordFilter};
+use crate::persistence::rdbms::{fetch_filtered_rows, ModelDatabaseInterface};
 
 #[derive(Clone, Debug, PartialEq, Eq, DeriveEntityModel, Serialize, Deserialize)]
 #[sea_orm(table_name = "comments")]
@@ -53,8 +53,8 @@ impl HasId<Uuid> for Model {
     }
 }
 
-impl RecordFilter for Entity {
-    fn from_params(list_parameters: &ListParameters) -> Condition {
+impl ModelDatabaseInterface<Entity> for Entity {
+    fn filter_from_params(list_parameters: &ListParameters) -> Condition {
         let mut condition = Condition::all();
         if let Some(filters) = &list_parameters.filters {
             for (key, val) in filters {
@@ -66,6 +66,20 @@ impl RecordFilter for Entity {
         }
 
         condition
+    }
+
+    fn order_by_from_params(list_parameters: &ListParameters) -> (<Entity as EntityTrait>::Column, Order) {
+        match &list_parameters.order_by {
+            Some(order_by) => {
+                let column = match order_by.as_str() {
+                    "created_by" => Column::CreatedBy,
+                    "creation_time" => Column::CreationTime,
+                    _ => Column::CreationTime,
+                };
+                (column, list_parameters.ordering.clone().unwrap_or_default().into())
+            }
+            None => (Column::CreationTime, Order::Desc),
+        }
     }
 }
 
@@ -86,17 +100,16 @@ impl<T> CommentRepository<T> {
 #[async_trait]
 impl<E> Repository<CommentId, Comment> for CommentRepository<E>
 where
-    E: Send + Sync + EntityTrait<Column = Column, Model = Model> + RecordFilter,
+    E: Send + Sync + EntityTrait<Column = Column, Model = Model> + ModelDatabaseInterface<E>,
     <E as EntityTrait>::Model: Send + Sync,
 {
     #[allow(clippy::cast_possible_wrap, clippy::cast_sign_loss)]
     async fn list(&self, list_parameters: ListParameters) -> crate::error::Result<Page<Comment>> {
-        let condition = E::from_params(&list_parameters);
         let (count, data) = fetch_filtered_rows(
             &self.db,
-            condition.clone(),
+            E::filter_from_params(&list_parameters),
             &list_parameters,
-            (Column::CreationTime, Order::Desc),
+            E::order_by_from_params(&list_parameters),
             E::find(),
         ).await?;
         

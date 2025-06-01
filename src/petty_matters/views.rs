@@ -118,6 +118,8 @@ where
     let comment_filters = ListParameters {
         page_size: PageSize(1000),
         page_number: PageNumber(1),
+        order_by: None,
+        ordering: None,
         filters: Some(HashMap::from([(
             "topic_id".to_string(),
             topic_id.to_string(),

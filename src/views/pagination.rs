@@ -4,11 +4,17 @@ use crate::persistence::repository::{PageNumber, PageSize};
 
 #[derive(Clone, Debug, Deserialize)]
 #[serde(rename_all = "lowercase")]
-enum Ordering {
+pub enum Ordering {
     #[serde(alias = "asc")]
     Ascending,
     #[serde(alias = "desc")]
     Descending,
+}
+
+impl Default for Ordering {
+    fn default() -> Self {
+        Ordering::Ascending
+    }
 }
 
 #[derive(Clone, Deserialize, Debug)]

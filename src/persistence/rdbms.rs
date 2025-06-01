@@ -2,6 +2,7 @@ use sea_orm::{FromQueryResult, Order, QueryFilter, QueryOrder, QuerySelect};
 use sea_orm::{Condition, DatabaseConnection, DeriveColumn, EntityTrait, EnumIter, Select};
 use sea_orm::sea_query::Expr;
 use crate::persistence::repository::ListParameters;
+use crate::views::pagination::Ordering;
 
 pub trait ModelDatabaseInterface<E: EntityTrait> {
     fn filter_from_params(list_parameters: &ListParameters) -> Condition;
@@ -42,4 +43,13 @@ where
         .await?;
 
     Ok((final_count as u64, data))
+}
+
+impl From<Ordering> for Order {
+    fn from(o: Ordering) -> Self {
+        match o {
+            Ordering::Ascending => Order::Asc,
+            Ordering::Descending => Order::Desc,
+        }
+    }
 }

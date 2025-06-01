@@ -7,8 +7,6 @@ use chrono::Utc;
 use sea_orm::entity::prelude::*;
 use sea_orm::{Condition, DeriveEntityModel, Order, Set};
 use serde::{Deserialize, Serialize};
-use crate::views::pagination::Ordering;
-
 #[derive(Clone, Debug, PartialEq, Eq, DeriveEntityModel, Serialize, Deserialize)]
 #[sea_orm(table_name = "topics")]
 pub struct Model {
@@ -33,16 +31,6 @@ impl HasId<Uuid> for Model {
         self.id
     }
 }
-
-impl From<Ordering> for Order {
-    fn from(o: Ordering) -> Self {
-        match o {
-            Ordering::Ascending => Order::Asc,
-            Ordering::Descending => Order::Desc,
-        }
-    }
-}
-
 
 impl ModelDatabaseInterface<Entity> for Entity {
     fn filter_from_params(list_parameters: &ListParameters) -> Condition {

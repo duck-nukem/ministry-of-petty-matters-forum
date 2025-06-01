@@ -12,7 +12,7 @@ pub trait ModelDatabaseInterface<E: EntityTrait, M, Id> {
     fn order_by_from_params(list_parameters: &ListParameters) -> (E::Column, Order);
     fn model_from_record(record: E::Model) -> M;
     fn model_to_record(model: M) -> E::ActiveModel;
-    fn unwrap_id(id: &Id) -> <<E>::PrimaryKey as PrimaryKeyTrait>::ValueType;
+    fn id_to_primary_key(id: &Id) -> <<E>::PrimaryKey as PrimaryKeyTrait>::ValueType;
 }
 
 #[derive(Copy, Clone, Debug, EnumIter, DeriveColumn)]
@@ -99,7 +99,7 @@ where
 
     #[allow(clippy::cast_sign_loss)]
     async fn get_by_id(&self, id: &Id) -> crate::error::Result<Option<ModelType>> {
-        match DbRecord::find_by_id(DbRecord::unwrap_id(id))
+        match DbRecord::find_by_id(DbRecord::id_to_primary_key(id))
             .one(&self.db)
             .await
         {
@@ -109,7 +109,7 @@ where
     }
 
     async fn delete(&self, id: &Id) -> crate::error::Result<()> {
-        DbRecord::delete_by_id(DbRecord::unwrap_id(id))
+        DbRecord::delete_by_id(DbRecord::id_to_primary_key(id))
             .exec(&self.db)
             .await?;
 

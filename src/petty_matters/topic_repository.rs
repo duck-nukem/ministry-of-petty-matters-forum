@@ -98,7 +98,7 @@ impl ModelDatabaseInterface<Self, Topic, TopicId> for Entity {
         }
     }
 
-    fn unwrap_id(
+    fn id_to_primary_key(
         id: &TopicId,
     ) -> <<Entity as EntityTrait>::PrimaryKey as PrimaryKeyTrait>::ValueType {
         id.0

@@ -115,7 +115,7 @@ impl ModelDatabaseInterface<Self, Comment, CommentId> for Entity {
         }
     }
 
-    fn unwrap_id(
+    fn id_to_primary_key(
         id: &CommentId,
     ) -> <<Self as EntityTrait>::PrimaryKey as PrimaryKeyTrait>::ValueType {
         id.0

@@ -46,12 +46,6 @@ impl ListParameters {
     }
 }
 
-pub trait DynamicAttributeValue {
-    type Output;
-    
-    fn get_field_value(&self, field: &str) -> Self::Output;
-}
-
 #[derive(Default)]
 pub struct Page<T> {
     pub current_page_number: PageNumber,

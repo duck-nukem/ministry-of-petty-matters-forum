@@ -1,5 +1,5 @@
 use crate::authn::session::{User, Username};
-use crate::persistence::repository::DynamicAttributeValue;
+use crate::persistence::in_memory_repository::DynamicAttributeValue;
 use crate::persistence::repository::HasId;
 use chrono::{DateTime, Utc};
 use serde::{Deserialize};

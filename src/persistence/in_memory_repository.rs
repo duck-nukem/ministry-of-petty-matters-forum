@@ -1,5 +1,5 @@
 use crate::error::Result;
-use crate::persistence::repository::{DynamicAttributeValue, HasId, ListParameters, Page, Repository};
+use crate::persistence::repository::{HasId, ListParameters, Page, Repository};
 use async_trait::async_trait;
 use std::collections::HashMap;
 use std::hash::Hash;
@@ -70,8 +70,8 @@ where
 
 #[cfg(test)]
 mod tests {
-    use crate::persistence::in_memory_repository::InMemoryRepository;
-    use crate::persistence::repository::{DynamicAttributeValue, HasId, ListParameters, PageNumber, PageSize, Repository};
+    use crate::persistence::in_memory_repository::{DynamicAttributeValue, InMemoryRepository};
+    use crate::persistence::repository::{HasId, ListParameters, PageNumber, PageSize, Repository};
 
     type StubId = i32;
 
@@ -173,4 +173,10 @@ mod tests {
 
         assert_eq!(page.items.clone().len(), 2);
     }
+}
+
+pub trait DynamicAttributeValue {
+    type Output;
+    
+    fn get_field_value(&self, field: &str) -> Self::Output;
 }

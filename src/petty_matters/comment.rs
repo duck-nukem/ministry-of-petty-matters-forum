@@ -5,7 +5,7 @@ use std::fmt::{Display, Formatter};
 use uuid::Uuid;
 use crate::authn::session::{User, Username};
 use crate::persistence::repository::HasId;
-use crate::persistence::repository::DynamicAttributeValue;
+use crate::persistence::in_memory_repository::DynamicAttributeValue;
 
 #[derive(Clone, Debug, Deserialize, Eq, PartialEq, Hash)]
 pub struct CommentId(pub Uuid);

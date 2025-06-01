@@ -1,5 +1,5 @@
 use crate::authn::session::Username;
-use crate::persistence::repository::{DynamicAttributeValue, HasId, ListParameters, Page, Repository};
+use crate::persistence::repository::{HasId, ListParameters, Page, Repository};
 use crate::petty_matters::topic::{Topic, TopicId};
 use async_trait::async_trait;
 use chrono::Utc;
@@ -26,19 +26,6 @@ pub struct Model {
 pub enum Relation {}
 
 impl ActiveModelBehavior for ActiveModel {}
-
-impl DynamicAttributeValue for Model {
-    type Output = Option<String>;
-
-    fn get_field_value(&self, field: &str) -> Self::Output {
-        match field {
-            "id" => Some(self.id.clone().to_string()),
-            "title" => Some(self.title.clone()),
-            "created_by" => Some(self.created_by.clone()),
-            _ => None,
-        }
-    }
-}
 
 impl HasId<Uuid> for Model {
     fn id(&self) -> Uuid {

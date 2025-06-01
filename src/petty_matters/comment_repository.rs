@@ -6,6 +6,7 @@ use chrono::Utc;
 use sea_orm::entity::prelude::*;
 use sea_orm::{Condition, DeriveEntityModel, Order, Set};
 use serde::{Deserialize, Serialize};
+use crate::petty_matters::topic::TopicId;
 
 #[derive(Clone, Debug, PartialEq, Eq, DeriveEntityModel, Serialize, Deserialize)]
 #[sea_orm(table_name = "comments")]
@@ -57,6 +58,7 @@ impl ModelDatabaseInterface<Self, Comment, CommentId> for Entity {
         if let Some(filters) = &list_parameters.filters {
             for (key, val) in filters {
                 match key.as_str() {
+                    "topic_id" => condition = condition.add(Column::TopicId.eq(TopicId::from(val).0)),
                     "created_by" => condition = condition.add(Column::CreatedBy.eq(val)),
                     "creation_time" => condition = condition.add(Column::CreationTime.gte(val)),
                     _ => {}

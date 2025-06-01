@@ -9,6 +9,13 @@ use uuid::Uuid;
 #[derive(Clone, Debug, Deserialize, Eq, PartialEq, Hash)]
 pub struct TopicId(pub Uuid);
 
+impl From<&String> for TopicId {
+    #[allow(clippy::expect_used)]
+    fn from(uuid_string: &String) -> Self {
+        TopicId(Uuid::parse_str(uuid_string).expect("Invalid UUID string"))
+    }
+}
+
 impl Display for TopicId {
     fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
         write!(f, "{}", self.0)

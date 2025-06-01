@@ -7,6 +7,8 @@ use sea_orm::entity::prelude::*;
 use sea_orm::{Condition, DeriveEntityModel, IntoActiveModel, Order, Set};
 use serde::{Deserialize, Serialize};
 use crate::persistence::rdbms::{fetch_filtered_rows, ModelDatabaseInterface};
+use crate::petty_matters::comment_repository;
+use crate::petty_matters::topic::TopicId;
 
 #[derive(Clone, Debug, PartialEq, Eq, DeriveEntityModel, Serialize, Deserialize)]
 #[sea_orm(table_name = "comments")]
@@ -53,7 +55,7 @@ impl HasId<Uuid> for Model {
     }
 }
 
-impl ModelDatabaseInterface<Entity, Comment> for Entity {
+impl ModelDatabaseInterface<Entity, Comment, CommentId> for Entity {
     fn filter_from_params(list_parameters: &ListParameters) -> Condition {
         let mut condition = Condition::all();
         if let Some(filters) = &list_parameters.filters {
@@ -107,6 +109,10 @@ impl ModelDatabaseInterface<Entity, Comment> for Entity {
             last_updated_time: Set(Option::from(Utc::now())),
         }
     }
+
+    fn unwrap_id(id: &CommentId) -> <<Entity as EntityTrait>::PrimaryKey as PrimaryKeyTrait>::ValueType {
+        id.0
+    }
 }
 
 pub struct CommentRepository<T> {
@@ -128,7 +134,7 @@ impl<E> Repository<CommentId, Comment> for CommentRepository<E>
 where
     E: Send + Sync
     + EntityTrait<Column = Column, Model = Model, ActiveModel = ActiveModel>
-    + ModelDatabaseInterface<E, Comment>,
+    + ModelDatabaseInterface<E, Comment, CommentId>,
     <E as EntityTrait>::Model: Send + Sync,
     Model: IntoActiveModel<<E as EntityTrait>::ActiveModel>,
 {

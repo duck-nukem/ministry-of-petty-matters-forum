@@ -33,7 +33,7 @@ impl HasId<Uuid> for Model {
     }
 }
 
-impl ModelDatabaseInterface<Entity, Topic> for Entity {
+impl ModelDatabaseInterface<Entity, Topic, TopicId> for Entity {
     fn filter_from_params(list_parameters: &ListParameters) -> Condition {
         let mut condition = Condition::all();
         if let Some(filters) = &list_parameters.filters {
@@ -50,7 +50,9 @@ impl ModelDatabaseInterface<Entity, Topic> for Entity {
         condition
     }
 
-    fn order_by_from_params(list_parameters: &ListParameters) -> (<Entity as EntityTrait>::Column, Order) {
+    fn order_by_from_params(
+        list_parameters: &ListParameters,
+    ) -> (<Entity as EntityTrait>::Column, Order) {
         match &list_parameters.order_by {
             Some(order_by) => {
                 let column = match order_by.as_str() {
@@ -59,7 +61,10 @@ impl ModelDatabaseInterface<Entity, Topic> for Entity {
                     "last_updated_time" => Column::LastUpdatedTime,
                     _ => Column::CreationTime,
                 };
-                (column, list_parameters.ordering.clone().unwrap_or_default().into())
+                (
+                    column,
+                    list_parameters.ordering.clone().unwrap_or_default().into(),
+                )
             }
             None => (Column::CreationTime, Order::Desc),
         }
@@ -90,6 +95,10 @@ impl ModelDatabaseInterface<Entity, Topic> for Entity {
             last_updated_time: Set(Option::from(model.last_updated_time)),
         }
     }
+
+    fn unwrap_id(id: &TopicId) -> <<crate::petty_matters::comment_repository::Entity as EntityTrait>::PrimaryKey as PrimaryKeyTrait>::ValueType{
+        id.0
+    }
 }
 
 pub struct TopicRepository<T> {
@@ -109,8 +118,12 @@ impl<T> TopicRepository<T> {
 #[async_trait]
 impl<E> Repository<TopicId, Topic> for TopicRepository<E>
 where
-    E: Send + Sync + EntityTrait<Column = Column, Model = Model, ActiveModel = ActiveModel> + ModelDatabaseInterface<E, Topic>,
-    <E as EntityTrait>::Model: Send + Sync, Model: IntoActiveModel<<E as EntityTrait>::ActiveModel>
+    E: Send
+        + Sync
+        + EntityTrait<Column = Column, Model = Model, ActiveModel = ActiveModel>
+        + ModelDatabaseInterface<E, Topic, TopicId>,
+    <E as EntityTrait>::Model: Send + Sync,
+    Model: IntoActiveModel<<E as EntityTrait>::ActiveModel>,
 {
     #[allow(clippy::cast_sign_loss)]
     async fn list(&self, list_parameters: ListParameters) -> crate::error::Result<Page<Topic>> {
@@ -124,10 +137,7 @@ where
         .await?;
 
         Ok(Page {
-            items: data
-                .into_iter()
-                .map(E::model_from_record)
-                .collect(),
+            items: data.into_iter().map(E::model_from_record).collect(),
             size: list_parameters.page_size,
             current_page_number: list_parameters.page_number,
             total_count: count,

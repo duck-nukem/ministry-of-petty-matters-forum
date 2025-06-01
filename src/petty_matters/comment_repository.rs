@@ -1,5 +1,5 @@
 use crate::authn::session::Username;
-use crate::persistence::repository::{Filterable, HasId, ListParameters, Page, Repository};
+use crate::persistence::repository::{DynamicAttributeValue, HasId, ListParameters, Page, Repository};
 use crate::petty_matters::comment::{Comment, CommentId};
 use async_trait::async_trait;
 use chrono::Utc;
@@ -47,7 +47,7 @@ impl Related<super::topic_repository::Entity> for Entity {
 
 impl ActiveModelBehavior for ActiveModel {}
 
-impl Filterable for Model {
+impl DynamicAttributeValue for Model {
     type Output = String;
     
     fn get_field_value(&self, _field: &str) -> Self::Output {

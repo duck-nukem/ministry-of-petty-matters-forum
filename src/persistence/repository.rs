@@ -46,7 +46,7 @@ impl ListParameters {
     }
 }
 
-pub trait Filterable {
+pub trait DynamicAttributeValue {
     type Output;
     
     fn get_field_value(&self, field: &str) -> Self::Output;
@@ -87,7 +87,7 @@ impl<T> Page<T> {
 pub trait Repository<ID, Entity>
 where
     ID: Send + Sync,
-    Entity: Send + Sync + HasId<ID> + Filterable,
+    Entity: Send + Sync + HasId<ID> + DynamicAttributeValue,
 {
     async fn list(&self, list_parameters: ListParameters) -> Result<Page<Entity>>;
     async fn save(&self, entity: Entity) -> Result<()>;

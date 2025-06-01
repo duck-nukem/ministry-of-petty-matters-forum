@@ -1,5 +1,5 @@
 use crate::error::Result;
-use crate::persistence::repository::{Filterable, HasId, ListParameters, Page, Repository};
+use crate::persistence::repository::{DynamicAttributeValue, HasId, ListParameters, Page, Repository};
 use async_trait::async_trait;
 use std::collections::HashMap;
 use std::hash::Hash;
@@ -26,7 +26,7 @@ where
 impl<ID, Entity> Repository<ID, Entity> for InMemoryRepository<ID, Entity>
 where
     ID: Send + Sync + Eq + Hash + Clone,
-    Entity: Send + Sync + Clone + HasId<ID> + Filterable<Output = Option<String>>,
+    Entity: Send + Sync + Clone + HasId<ID> + DynamicAttributeValue<Output = Option<String>>,
 {
     #[allow(clippy::significant_drop_tightening)]
     async fn list(&self, list_parameters: ListParameters) -> Result<Page<Entity>> {
@@ -71,7 +71,7 @@ where
 #[cfg(test)]
 mod tests {
     use crate::persistence::in_memory_repository::InMemoryRepository;
-    use crate::persistence::repository::{Filterable, HasId, ListParameters, PageNumber, PageSize, Repository};
+    use crate::persistence::repository::{DynamicAttributeValue, HasId, ListParameters, PageNumber, PageSize, Repository};
 
     type StubId = i32;
 
@@ -92,7 +92,7 @@ mod tests {
         }
     }
 
-    impl Filterable for StubEntity {
+    impl DynamicAttributeValue for StubEntity {
         type Output = Option<String>;
         
         fn get_field_value(&self, _field: &str) -> Self::Output {

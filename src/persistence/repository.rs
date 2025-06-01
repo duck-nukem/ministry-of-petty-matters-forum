@@ -87,7 +87,7 @@ impl<T> Page<T> {
 pub trait Repository<ID, Entity>
 where
     ID: Send + Sync,
-    Entity: Send + Sync + HasId<ID> + DynamicAttributeValue,
+    Entity: Send + Sync + HasId<ID>,
 {
     async fn list(&self, list_parameters: ListParameters) -> Result<Page<Entity>>;
     async fn save(&self, entity: Entity) -> Result<()>;

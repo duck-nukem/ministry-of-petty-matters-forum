@@ -5,8 +5,9 @@ use crate::petty_matters::topic::{Topic, TopicId};
 use async_trait::async_trait;
 use chrono::Utc;
 use sea_orm::entity::prelude::*;
-use sea_orm::{Condition, DeriveEntityModel, Order, Set};
+use sea_orm::{Condition, DeriveEntityModel, IntoActiveModel, Order, Set};
 use serde::{Deserialize, Serialize};
+
 #[derive(Clone, Debug, PartialEq, Eq, DeriveEntityModel, Serialize, Deserialize)]
 #[sea_orm(table_name = "topics")]
 pub struct Model {
@@ -76,6 +77,19 @@ impl ModelDatabaseInterface<Entity, Topic> for Entity {
             last_updated_time: record.last_updated_time,
         }
     }
+
+    fn model_to_record(model: Topic) -> ActiveModel {
+        ActiveModel {
+            id: Set(model.id.0),
+            title: Set(model.title),
+            content: Set(model.content),
+            upvotes_count: Set(model.upvotes_count as i32),
+            downvotes_count: Set(model.downvotes_count as i32),
+            created_by: Set(model.created_by.0),
+            creation_time: Set(model.creation_time),
+            last_updated_time: Set(Option::from(model.last_updated_time)),
+        }
+    }
 }
 
 pub struct TopicRepository<T> {
@@ -95,8 +109,8 @@ impl<T> TopicRepository<T> {
 #[async_trait]
 impl<E> Repository<TopicId, Topic> for TopicRepository<E>
 where
-    E: Send + Sync + EntityTrait<Column = Column, Model = Model> + ModelDatabaseInterface<E, Topic>,
-    <E as EntityTrait>::Model: Send + Sync,
+    E: Send + Sync + EntityTrait<Column = Column, Model = Model, ActiveModel = ActiveModel> + ModelDatabaseInterface<E, Topic>,
+    <E as EntityTrait>::Model: Send + Sync, Model: IntoActiveModel<<E as EntityTrait>::ActiveModel>
 {
     #[allow(clippy::cast_sign_loss)]
     async fn list(&self, list_parameters: ListParameters) -> crate::error::Result<Page<Topic>> {
@@ -122,16 +136,7 @@ where
 
     #[allow(clippy::cast_possible_wrap)]
     async fn save(&self, entity: Topic) -> crate::error::Result<()> {
-        let active_model = ActiveModel {
-            id: Set(entity.id.0),
-            title: Set(entity.title),
-            content: Set(entity.content),
-            upvotes_count: Set(entity.upvotes_count as i32),
-            downvotes_count: Set(entity.downvotes_count as i32),
-            created_by: Set(entity.created_by.to_string()),
-            creation_time: Set(entity.creation_time),
-            last_updated_time: Set(Option::from(Utc::now())),
-        };
+        let active_model: ActiveModel = E::model_to_record(entity.clone());
 
         if let Some(_id_already_exists) = &self.get_by_id(&entity.id).await? {
             Entity::update(active_model).exec(&self.db).await?;

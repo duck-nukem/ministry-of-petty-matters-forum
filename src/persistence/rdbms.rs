@@ -8,6 +8,7 @@ pub trait ModelDatabaseInterface<E: EntityTrait, M> {
     fn filter_from_params(list_parameters: &ListParameters) -> Condition;
     fn order_by_from_params(list_parameters: &ListParameters) -> (E::Column, Order);
     fn model_from_record(record: E::Model) -> M;
+    fn model_to_record(model: M) -> E::ActiveModel;
 }
 
 #[derive(Copy, Clone, Debug, EnumIter, DeriveColumn)]

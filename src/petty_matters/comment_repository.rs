@@ -4,7 +4,7 @@ use crate::petty_matters::comment::{Comment, CommentId};
 use async_trait::async_trait;
 use chrono::Utc;
 use sea_orm::entity::prelude::*;
-use sea_orm::{Condition, DeriveEntityModel, Order, Set};
+use sea_orm::{Condition, DeriveEntityModel, IntoActiveModel, Order, Set};
 use serde::{Deserialize, Serialize};
 use crate::persistence::rdbms::{fetch_filtered_rows, ModelDatabaseInterface};
 
@@ -94,6 +94,19 @@ impl ModelDatabaseInterface<Entity, Comment> for Entity {
             last_updated_time: record.last_updated_time,
         }
     }
+
+    fn model_to_record(model: Comment) -> <Entity as EntityTrait>::ActiveModel {
+        ActiveModel {
+            id: Set(model.id.0),
+            topic_id: Set(model.topic_id.0),
+            content: Set(model.content),
+            upvotes_count: Set(model.upvotes_count as i32),
+            downvotes_count: Set(model.downvotes_count as i32),
+            created_by: Set(model.created_by.to_string()),
+            creation_time: Set(model.creation_time),
+            last_updated_time: Set(Option::from(Utc::now())),
+        }
+    }
 }
 
 pub struct CommentRepository<T> {
@@ -113,8 +126,11 @@ impl<T> CommentRepository<T> {
 #[async_trait]
 impl<E> Repository<CommentId, Comment> for CommentRepository<E>
 where
-    E: Send + Sync + EntityTrait<Column = Column, Model = Model> + ModelDatabaseInterface<E, Comment>,
+    E: Send + Sync
+    + EntityTrait<Column = Column, Model = Model, ActiveModel = ActiveModel>
+    + ModelDatabaseInterface<E, Comment>,
     <E as EntityTrait>::Model: Send + Sync,
+    Model: IntoActiveModel<<E as EntityTrait>::ActiveModel>,
 {
     #[allow(clippy::cast_possible_wrap, clippy::cast_sign_loss)]
     async fn list(&self, list_parameters: ListParameters) -> crate::error::Result<Page<Comment>> {
@@ -139,16 +155,7 @@ where
 
     #[allow(clippy::cast_possible_wrap)]
     async fn save(&self, entity: Comment) -> crate::error::Result<()> {
-        let active_model = ActiveModel {
-            id: Set(entity.id.0),
-            topic_id: Set(entity.topic_id.0),
-            content: Set(entity.content),
-            upvotes_count: Set(entity.upvotes_count as i32),
-            downvotes_count: Set(entity.downvotes_count as i32),
-            created_by: Set(entity.created_by.to_string()),
-            creation_time: Set(entity.creation_time),
-            last_updated_time: Set(Option::from(Utc::now())),
-        };
+        let active_model: ActiveModel = E::model_to_record(entity.clone());
 
         if let Some(_id_already_exists) = &self.get_by_id(&entity.id).await? {
             Entity::update(active_model).exec(&self.db).await?;

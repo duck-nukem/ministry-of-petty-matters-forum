@@ -30,7 +30,7 @@ where
 {
     #[allow(clippy::significant_drop_tightening)]
     async fn list(&self, list_parameters: ListParameters) -> Result<Page<Entity>> {
-        let offset = (list_parameters.page_number.0 - 1) * list_parameters.page_size.0;
+        let offset = list_parameters.calculate_offset();
         let collection = self.store.lock().await;
         let key_value_pairs = collection.values();
         let page = Page {
@@ -46,7 +46,7 @@ where
                     })
                 })
                 .skip(offset)
-                .take(list_parameters.page_size.0)
+                .take(list_parameters.calculate_limit())
                 .cloned()
                 .collect(),
         };

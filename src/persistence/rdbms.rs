@@ -1,10 +1,11 @@
-use async_trait::async_trait;
-use sea_orm::{FromQueryResult, IntoActiveModel, Order, PrimaryKeyTrait, QueryFilter, QueryOrder, QuerySelect};
-use sea_orm::{Condition, DatabaseConnection, DeriveColumn, EntityTrait, EnumIter, Select};
-use sea_orm::sea_query::Expr;
 use crate::persistence::repository::{HasId, ListParameters, Page, Repository};
-use crate::petty_matters::comment_repository::Entity;
 use crate::views::pagination::Ordering;
+use async_trait::async_trait;
+use sea_orm::sea_query::Expr;
+use sea_orm::{Condition, DatabaseConnection, DeriveColumn, EntityTrait, EnumIter, Select};
+use sea_orm::{
+    FromQueryResult, IntoActiveModel, Order, PrimaryKeyTrait, QueryFilter, QueryOrder, QuerySelect,
+};
 
 pub trait ModelDatabaseInterface<E: EntityTrait, M, Id> {
     fn filter_from_params(list_parameters: &ListParameters) -> Condition;
@@ -33,7 +34,8 @@ where
 {
     let resulting_rows = select.filter(condition);
     // Workaround: .count() is ambiguous, it wants to use an iterable count
-    let count = resulting_rows.clone()
+    let count = resulting_rows
+        .clone()
         .select_only()
         .column_as(Expr::val(1).count(), "count")
         .into_values::<_, Counter>()
@@ -53,8 +55,8 @@ where
 impl From<Ordering> for Order {
     fn from(o: Ordering) -> Self {
         match o {
-            Ordering::Ascending => Order::Asc,
-            Ordering::Descending => Order::Desc,
+            Ordering::Ascending => Self::Asc,
+            Ordering::Descending => Self::Desc,
         }
     }
 }
@@ -65,7 +67,7 @@ pub struct RdbmsRepository<E> {
 }
 
 impl<E> RdbmsRepository<E> {
-    pub fn new(db: DatabaseConnection) -> Self {
+    pub const fn new(db: DatabaseConnection) -> Self {
         Self {
             db,
             _marker: std::marker::PhantomData,
@@ -73,17 +75,15 @@ impl<E> RdbmsRepository<E> {
     }
 }
 
-
 #[async_trait]
 impl<DbRecord, Id, ModelType> Repository<Id, ModelType> for RdbmsRepository<DbRecord>
 where
     Id: Send + Sync + Clone,
     ModelType: Send + Sync + Clone + HasId<Id> + 'static,
-    DbRecord: Send + Sync
-    + EntityTrait<
-        Model: IntoActiveModel<<DbRecord as EntityTrait>::ActiveModel>
-    >
-    + ModelDatabaseInterface<DbRecord, ModelType, Id>,
+    DbRecord: Send
+        + Sync
+        + EntityTrait<Model: IntoActiveModel<<DbRecord as EntityTrait>::ActiveModel>>
+        + ModelDatabaseInterface<DbRecord, ModelType, Id>,
     <DbRecord as EntityTrait>::Model: Send + Sync,
     <DbRecord as EntityTrait>::ActiveModel: Send + 'static,
 {
@@ -95,13 +95,11 @@ where
             &list_parameters,
             DbRecord::order_by_from_params(&list_parameters),
             DbRecord::find(),
-        ).await?;
+        )
+        .await?;
 
         Ok(Page {
-            items: data
-                .into_iter()
-                .map(DbRecord::model_from_record)
-                .collect(),
+            items: data.into_iter().map(DbRecord::model_from_record).collect(),
             size: list_parameters.page_size,
             current_page_number: list_parameters.page_number,
             total_count: count,
@@ -123,17 +121,20 @@ where
 
     #[allow(clippy::cast_sign_loss)]
     async fn get_by_id(&self, id: &Id) -> crate::error::Result<Option<ModelType>> {
-        match DbRecord::find_by_id(DbRecord::unwrap_id(id)).one(&self.db).await {
+        match DbRecord::find_by_id(DbRecord::unwrap_id(id))
+            .one(&self.db)
+            .await
+        {
             Ok(Some(record)) => Ok(Some(DbRecord::model_from_record(record))),
             Ok(None) | Err(_) => Ok(None),
         }
     }
 
     async fn delete(&self, id: &Id) -> crate::error::Result<()> {
-        DbRecord::delete_by_id(DbRecord::unwrap_id(id)).exec(&self.db).await?;
+        DbRecord::delete_by_id(DbRecord::unwrap_id(id))
+            .exec(&self.db)
+            .await?;
 
         Ok(())
     }
 }
-
-

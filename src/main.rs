@@ -10,8 +10,8 @@ use sea_orm::{ConnectOptions, Database, DatabaseConnection};
 use tokio::sync::mpsc::channel;
 use tower_http::services::ServeDir;
 use crate::persistence::rdbms::RdbmsRepository;
-use crate::petty_matters::comment_repository::{CommentRepository, Entity as CommentDbModel};
-use crate::petty_matters::topic_repository::{Entity as TopicDbModel, TopicRepository};
+use crate::petty_matters::comment_repository::{Entity as CommentDbModel};
+use crate::petty_matters::topic_repository::{Entity as TopicDbModel};
 use crate::queue::in_memory_queue::WriteQueue;
 use crate::queue::worker::start_write_worker;
 

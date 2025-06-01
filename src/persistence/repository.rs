@@ -25,9 +25,9 @@ impl Default for ListParameters {
         Self {
             page_size: PageSize(20),
             page_number: PageNumber(1),
-            filters: Default::default(),
-            order_by: Default::default(),
-            ordering: Default::default(),
+            filters: Option::default(),
+            order_by: Option::default(),
+            ordering: Option::default(),
         }
     }
 }
@@ -40,7 +40,7 @@ impl ListParameters {
     pub const fn calculate_limit(&self) -> usize {
         self.page_size.0
     }
-    
+
     pub fn from_query_params(page_filters: &Query<PageFilters>) -> Self {
         Self {
             page_size: page_filters.page_size.unwrap_or(PageSize(20)),

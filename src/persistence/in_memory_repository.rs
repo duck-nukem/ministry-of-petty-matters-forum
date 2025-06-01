@@ -26,7 +26,7 @@ where
 impl<ID, Entity> Repository<ID, Entity> for InMemoryRepository<ID, Entity>
 where
     ID: Send + Sync + Eq + Hash + Clone,
-    Entity: Send + Sync + Clone + HasId<ID> + DynamicAttributeValue<Output = Option<String>>,
+    Entity: Send + Sync + Clone + HasId<ID> + FilterableAttributes<Output = Option<String>>,
 {
     #[allow(clippy::significant_drop_tightening)]
     async fn list(&self, list_parameters: ListParameters) -> Result<Page<Entity>> {
@@ -70,7 +70,7 @@ where
 
 #[cfg(test)]
 mod tests {
-    use crate::persistence::in_memory_repository::{DynamicAttributeValue, InMemoryRepository};
+    use crate::persistence::in_memory_repository::{FilterableAttributes, InMemoryRepository};
     use crate::persistence::repository::{HasId, ListParameters, PageNumber, PageSize, Repository};
 
     type StubId = i32;
@@ -92,7 +92,7 @@ mod tests {
         }
     }
 
-    impl DynamicAttributeValue for StubEntity {
+    impl FilterableAttributes for StubEntity {
         type Output = Option<String>;
         
         fn get_field_value(&self, _field: &str) -> Self::Output {
@@ -175,7 +175,8 @@ mod tests {
     }
 }
 
-pub trait DynamicAttributeValue {
+/// Used by in-memory repositories to perform filtering
+pub trait FilterableAttributes {
     type Output;
     
     fn get_field_value(&self, field: &str) -> Self::Output;

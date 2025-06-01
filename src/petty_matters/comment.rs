@@ -5,7 +5,7 @@ use std::fmt::{Display, Formatter};
 use uuid::Uuid;
 use crate::authn::session::{User, Username};
 use crate::persistence::repository::HasId;
-use crate::persistence::in_memory_repository::DynamicAttributeValue;
+use crate::persistence::in_memory_repository::FilterableAttributes;
 
 #[derive(Clone, Debug, Deserialize, Eq, PartialEq, Hash)]
 pub struct CommentId(pub Uuid);
@@ -50,7 +50,7 @@ impl HasId<CommentId> for Comment {
     }
 }
 
-impl DynamicAttributeValue for Comment {
+impl FilterableAttributes for Comment {
     type Output = Option<String>;
     
     fn get_field_value(&self, field: &str) -> Self::Output {

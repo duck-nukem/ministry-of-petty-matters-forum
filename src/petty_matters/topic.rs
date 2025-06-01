@@ -1,5 +1,5 @@
 use crate::authn::session::{User, Username};
-use crate::persistence::in_memory_repository::DynamicAttributeValue;
+use crate::persistence::in_memory_repository::FilterableAttributes;
 use crate::persistence::repository::HasId;
 use chrono::{DateTime, Utc};
 use serde::{Deserialize};
@@ -63,7 +63,7 @@ impl HasId<TopicId> for Topic {
     }
 }
 
-impl DynamicAttributeValue for Topic {
+impl FilterableAttributes for Topic {
     type Output = Option<String>;
     
     fn get_field_value(&self, field: &str) ->Self::Output {

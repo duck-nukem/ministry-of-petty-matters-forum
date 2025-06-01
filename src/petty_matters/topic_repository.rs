@@ -32,7 +32,7 @@ impl HasId<Uuid> for Model {
     }
 }
 
-impl ModelDatabaseInterface<Entity> for Entity {
+impl ModelDatabaseInterface<Entity, Topic> for Entity {
     fn filter_from_params(list_parameters: &ListParameters) -> Condition {
         let mut condition = Condition::all();
         if let Some(filters) = &list_parameters.filters {
@@ -63,6 +63,19 @@ impl ModelDatabaseInterface<Entity> for Entity {
             None => (Column::CreationTime, Order::Desc),
         }
     }
+
+    fn from_record(record: Model) -> Topic {
+        Topic {
+            id: TopicId(record.id),
+            title: record.title,
+            content: record.content,
+            upvotes_count: record.upvotes_count as u32,
+            downvotes_count: record.downvotes_count as u32,
+            created_by: Username(record.created_by),
+            creation_time: record.creation_time,
+            last_updated_time: record.last_updated_time,
+        }
+    }
 }
 
 pub struct TopicRepository<T> {
@@ -82,7 +95,7 @@ impl<T> TopicRepository<T> {
 #[async_trait]
 impl<E> Repository<TopicId, Topic> for TopicRepository<E>
 where
-    E: Send + Sync + EntityTrait<Column = Column, Model = Model> + ModelDatabaseInterface<E>,
+    E: Send + Sync + EntityTrait<Column = Column, Model = Model> + ModelDatabaseInterface<E, Topic>,
     <E as EntityTrait>::Model: Send + Sync,
 {
     #[allow(clippy::cast_sign_loss)]
@@ -99,16 +112,7 @@ where
         Ok(Page {
             items: data
                 .into_iter()
-                .map(|record| Topic {
-                    id: TopicId(record.id),
-                    title: record.title,
-                    content: record.content,
-                    upvotes_count: record.upvotes_count as u32,
-                    downvotes_count: record.downvotes_count as u32,
-                    created_by: Username(record.created_by),
-                    creation_time: record.creation_time,
-                    last_updated_time: record.last_updated_time,
-                })
+                .map(E::from_record)
                 .collect(),
             size: list_parameters.page_size,
             current_page_number: list_parameters.page_number,
@@ -141,16 +145,7 @@ where
     #[allow(clippy::cast_sign_loss)]
     async fn get_by_id(&self, id: &TopicId) -> crate::error::Result<Option<Topic>> {
         match Entity::find_by_id(id.0).one(&self.db).await {
-            Ok(Some(record)) => Ok(Some(Topic {
-                id: TopicId(record.id),
-                title: record.title,
-                content: record.content,
-                upvotes_count: record.upvotes_count as u32,
-                downvotes_count: record.downvotes_count as u32,
-                created_by: Username(record.created_by),
-                creation_time: record.creation_time,
-                last_updated_time: record.last_updated_time,
-            })),
+            Ok(Some(record)) => Ok(Some(E::from_record(record))),
             Ok(None) | Err(_) => Ok(None),
         }
     }

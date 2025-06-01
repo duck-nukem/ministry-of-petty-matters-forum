@@ -4,9 +4,10 @@ use sea_orm::sea_query::Expr;
 use crate::persistence::repository::ListParameters;
 use crate::views::pagination::Ordering;
 
-pub trait ModelDatabaseInterface<E: EntityTrait> {
+pub trait ModelDatabaseInterface<E: EntityTrait, M> {
     fn filter_from_params(list_parameters: &ListParameters) -> Condition;
     fn order_by_from_params(list_parameters: &ListParameters) -> (E::Column, Order);
+    fn from_record(record: E::Model) -> M;
 }
 
 #[derive(Copy, Clone, Debug, EnumIter, DeriveColumn)]

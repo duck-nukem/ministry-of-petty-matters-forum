@@ -5,7 +5,7 @@ WORKDIR /opt/app
 COPY . .
 COPY Cargo.* .
 RUN cargo build --release
-RUN cargo install sea-orm-cli --features sqlx-postgres \
+RUN cargo install sea-orm-cli --features sqlx-postgres
 
 FROM gcr.io/distroless/cc AS runner
 

@@ -98,7 +98,9 @@ impl ModelDatabaseInterface<Self, Topic, TopicId> for Entity {
         }
     }
 
-    fn unwrap_id(id: &TopicId) -> <<crate::petty_matters::comment_repository::Entity as EntityTrait>::PrimaryKey as PrimaryKeyTrait>::ValueType{
+    fn unwrap_id(
+        id: &TopicId,
+    ) -> <<Entity as EntityTrait>::PrimaryKey as PrimaryKeyTrait>::ValueType {
         id.0
     }
 }

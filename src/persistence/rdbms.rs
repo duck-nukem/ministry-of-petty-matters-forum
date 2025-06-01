@@ -2,9 +2,9 @@ use crate::persistence::repository::{HasId, ListParameters, Page, Repository};
 use crate::views::pagination::Ordering;
 use async_trait::async_trait;
 use sea_orm::sea_query::Expr;
-use sea_orm::{Condition, DatabaseConnection, DeriveColumn, EntityTrait, EnumIter, Select};
+use sea_orm::{Condition, DatabaseConnection, DeriveColumn, EntityTrait, EnumIter};
 use sea_orm::{
-    FromQueryResult, IntoActiveModel, Order, PrimaryKeyTrait, QueryFilter, QueryOrder, QuerySelect,
+    IntoActiveModel, Order, PrimaryKeyTrait, QueryFilter, QueryOrder, QuerySelect,
 };
 
 pub trait ModelDatabaseInterface<E: EntityTrait, M, Id> {
@@ -18,38 +18,6 @@ pub trait ModelDatabaseInterface<E: EntityTrait, M, Id> {
 #[derive(Copy, Clone, Debug, EnumIter, DeriveColumn)]
 enum Counter {
     Count,
-}
-
-#[allow(clippy::cast_sign_loss)]
-pub async fn fetch_filtered_rows<T, R>(
-    db: &DatabaseConnection,
-    condition: Condition,
-    list_parameters: &ListParameters,
-    ordering: (T::Column, Order),
-    select: Select<T>,
-) -> crate::error::Result<(u64, Vec<R>)>
-where
-    T: EntityTrait<Model = R>,
-    R: Send + Sync + FromQueryResult,
-{
-    let resulting_rows = select.filter(condition);
-    // Workaround: .count() is ambiguous, it wants to use an iterable count
-    let count = resulting_rows
-        .clone()
-        .select_only()
-        .column_as(Expr::val(1).count(), "count")
-        .into_values::<_, Counter>()
-        .one(db)
-        .await?;
-    let final_count: i64 = count.unwrap_or_default();
-    let data = resulting_rows
-        .offset(Some(list_parameters.calculate_offset() as u64))
-        .limit(Some(list_parameters.calculate_limit() as u64))
-        .order_by(ordering.0, ordering.1)
-        .all(db)
-        .await?;
-
-    Ok((final_count as u64, data))
 }
 
 impl From<Ordering> for Order {
@@ -89,20 +57,30 @@ where
 {
     #[allow(clippy::cast_possible_wrap, clippy::cast_sign_loss)]
     async fn list(&self, list_parameters: ListParameters) -> crate::error::Result<Page<ModelType>> {
-        let (count, data) = fetch_filtered_rows(
-            &self.db,
+        let resulting_rows = DbRecord::find().filter(
             DbRecord::filter_from_params(&list_parameters),
-            &list_parameters,
-            DbRecord::order_by_from_params(&list_parameters),
-            DbRecord::find(),
-        )
-        .await?;
+        );
+        // Workaround: .count() is ambiguous, it wants to use an iterable count
+        let count: Option<i64> = resulting_rows
+            .clone()
+            .select_only()
+            .column_as(Expr::val(1).count(), "count")
+            .into_values::<_, Counter>()
+            .one(&self.db)
+            .await?;
+        let (order_by_column, order_direction) = DbRecord::order_by_from_params(&list_parameters);
+        let data = resulting_rows
+            .offset(Some(list_parameters.calculate_offset() as u64))
+            .limit(Some(list_parameters.calculate_limit() as u64))
+            .order_by(order_by_column, order_direction)
+            .all(&self.db)
+            .await?;
 
         Ok(Page {
             items: data.into_iter().map(DbRecord::model_from_record).collect(),
             size: list_parameters.page_size,
             current_page_number: list_parameters.page_number,
-            total_count: count,
+            total_count: count.unwrap_or_default() as u64,
         })
     }
 

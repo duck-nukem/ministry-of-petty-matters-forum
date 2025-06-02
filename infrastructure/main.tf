@@ -12,4 +12,8 @@ module "petty_matters_app" {
   registry_type     = "DOCR"
   docker_image_name = "ministry"
   docker_image_tag  = "latest"
+
+  # Workaround: DOCR limit, this should be a different image name
+  task_runner_docker_image_name = "ministry"
+  task_runner_docker_image_tag = "deps"
 }

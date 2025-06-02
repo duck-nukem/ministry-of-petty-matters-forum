@@ -33,3 +33,11 @@ variable "docker_image_name" {
 variable "docker_image_tag" {
   default = ""
 }
+
+variable "task_runner_docker_image_name" {
+  default = ""
+}
+
+variable "task_runner_docker_image_tag" {
+  default = ""
+}

@@ -12,7 +12,7 @@ resource "digitalocean_app" "app_platform" {
     job {
       name = "migrate"
 
-      kind        = "POST_DEPLOY"
+      kind        = "PRE_DEPLOY"
       run_command = "sea-orm-cli migrate up -u $DATABASE_URL"
 
       env {
@@ -24,8 +24,8 @@ resource "digitalocean_app" "app_platform" {
 
       image {
         registry_type = var.registry_type
-        repository    = var.docker_image_name
-        tag           = var.docker_image_tag
+        repository    = var.task_runner_docker_image_name
+        tag           = var.task_runner_docker_image_tag
 
         deploy_on_push {
           enabled = true

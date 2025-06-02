@@ -1,15 +1,18 @@
-FROM rust:slim AS builder
+FROM rust:bullseye AS base
+WORKDIR /opt/app
+COPY Cargo.toml Cargo.lock ./
+# Pre-build dependencies to cache them in Docker layer
+RUN mkdir src && echo 'fn main() {}' > src/main.rs
+RUN cargo build --release && rm -r src
 
-RUN mkdir -p /opt/app
+FROM rust:bullseye AS builder
 WORKDIR /opt/app
 COPY . .
-COPY Cargo.* .
 RUN cargo build --release
-RUN cargo install sea-orm-cli --features sqlx-postgres
+RUN cargo install sea-orm-cli --features "sqlx-postgres,runtime-tokio-rustls"
 
 FROM gcr.io/distroless/cc AS runner
-
-COPY --from=builder /usr/local/cargo/bin/sea-orm-cli /usr/local/bin/sea-orm-cli
+COPY --from=builder /usr/local/cargo/bin/ /usr/local/bin/
 COPY --from=builder /opt/app/target/release/ministry-of-petty-matters-forum /usr/bin/mopm
 COPY assets /var/assets
 WORKDIR /var

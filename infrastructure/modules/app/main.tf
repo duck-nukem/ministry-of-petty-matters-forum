@@ -13,11 +13,12 @@ resource "digitalocean_app" "app_platform" {
       name = "migrate"
 
       kind        = "PRE_DEPLOY"
-      run_command = "sea-orm-cli migrate up -u $DATABASE_URL"
+      run_command = "migration up -u ${digitalocean_database_cluster.main.uri}"
 
       env {
         key   = "DATABASE_URL"
         value = digitalocean_database_cluster.main.uri
+
         scope = "RUN_AND_BUILD_TIME"
         type  = "SECRET"
       }

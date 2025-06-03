@@ -22,9 +22,9 @@ jobs:
     - name: Run tests
       run: cargo test --verbose
 
-  push_image:
+  push_app_image:
     needs: test
-    name: Push Docker Image
+    name: Push Application Docker Image
     runs-on: ubuntu-latest
 
     steps:
@@ -43,3 +43,26 @@ jobs:
       with:
         push: ${{ env.PUSH_IMAGE == 'true' }}
         tags: registry.digitalocean.com/petty-matters/ministry:latest
+
+  push_aux_image:
+    needs: test
+    name: Push Auxiliary Services Docker Image
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Login to Docker Hub
+      uses: docker/login-action@v3
+      with:
+        registry: registry.digitalocean.com
+        username: ${{ vars.DOCKER_USERNAME }}
+        password: ${{ secrets.DOCKER_TOKEN }}
+    - name: Set up QEMU
+      uses: docker/setup-qemu-action@v3
+    - name: Set up Docker Buildx
+      uses: docker/setup-buildx-action@v3
+    - name: Build and push
+      uses: docker/build-push-action@v6
+      with:
+        context: "{{defaultContext}}:migration"
+        push: ${{ env.PUSH_IMAGE == 'true' }}
+        tags: registry.digitalocean.com/petty-matters/ministry:deps

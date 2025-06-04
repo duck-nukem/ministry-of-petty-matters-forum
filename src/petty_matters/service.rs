@@ -65,7 +65,7 @@ where
 
         match results {
             Ok(page) => {
-                CACHE.insert(list_parameters.clone(), page.clone()).await;
+                CACHE.insert(list_parameters, page.clone()).await;
                 Ok(page)
             }
             Err(e) => Err(e),

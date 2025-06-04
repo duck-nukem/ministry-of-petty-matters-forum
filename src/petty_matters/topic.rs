@@ -12,7 +12,7 @@ pub struct TopicId(pub Uuid);
 impl From<&String> for TopicId {
     #[allow(clippy::expect_used)]
     fn from(uuid_string: &String) -> Self {
-        TopicId(Uuid::parse_str(uuid_string).expect("Invalid UUID string"))
+        Self(Uuid::parse_str(uuid_string).expect("Invalid UUID string"))
     }
 }
 

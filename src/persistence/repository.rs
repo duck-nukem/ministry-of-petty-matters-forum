@@ -1,23 +1,24 @@
-use std::collections::HashMap;
 use crate::error::Result;
+use crate::views::pagination::{Ordering, PageFilters};
 use async_trait::async_trait;
 use axum::extract::Query;
 use serde::Deserialize;
-use crate::views::pagination::{Ordering, PageFilters};
+use std::collections::BTreeMap;
+use std::hash::Hash;
 
-#[derive(Clone, Debug, Copy, Default, Deserialize, Eq, PartialEq)]
+#[derive(Clone, Debug, Copy, Default, Deserialize, Eq, PartialEq, Hash)]
 pub struct PageNumber(pub usize);
 
-#[derive(Clone, Debug, Copy, Default, Deserialize)]
+#[derive(Clone, Debug, Copy, Default, Deserialize, Eq, PartialEq, Hash)]
 pub struct PageSize(pub usize);
 
-#[derive(Debug)]
+#[derive(Clone, Debug, Eq, Hash, PartialEq)]
 pub struct ListParameters {
     pub page_size: PageSize,
     pub page_number: PageNumber,
     pub order_by: Option<String>,
     pub ordering: Option<Ordering>,
-    pub filters: Option<HashMap<String, String>>,
+    pub filters: Option<BTreeMap<String, String>>,
 }
 
 impl Default for ListParameters {
@@ -36,7 +37,7 @@ impl ListParameters {
     pub const fn calculate_offset(&self) -> usize {
         (self.page_number.0 - 1) * self.page_size.0
     }
-    
+
     pub const fn calculate_limit(&self) -> usize {
         self.page_size.0
     }
@@ -52,7 +53,7 @@ impl ListParameters {
     }
 }
 
-#[derive(Default)]
+#[derive(Clone, Default)]
 pub struct Page<T> {
     pub current_page_number: PageNumber,
     pub size: PageSize,
@@ -64,11 +65,11 @@ impl<T> Page<T> {
     pub const fn is_first_page(&self) -> bool {
         self.current_page_number.0 == 1
     }
-    
+
     pub const fn has_next_page(&self) -> bool {
         self.total_count > (self.current_page_number.0 * self.size.0) as u64
     }
-    
+
     pub const fn get_next_page_number(&self) -> usize {
         if self.has_next_page() {
             self.current_page_number.0 + 1
@@ -76,7 +77,7 @@ impl<T> Page<T> {
             0
         }
     }
-    
+
     pub const fn get_previous_page_number(&self) -> usize {
         self.current_page_number.0.saturating_sub(1)
     }

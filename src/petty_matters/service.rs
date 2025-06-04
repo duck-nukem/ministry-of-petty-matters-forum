@@ -4,8 +4,19 @@ use crate::persistence::repository::{ListParameters, Page, Repository};
 use crate::petty_matters::comment::{Comment, CommentId};
 use crate::petty_matters::topic::{Topic, TopicId};
 use crate::queue::base::{Queue, QueueError, WriteOperation};
-use std::collections::HashMap;
-use std::sync::Arc;
+use moka::future::Cache;
+use std::collections::BTreeMap;
+use std::sync::{Arc, LazyLock};
+use std::time::Duration;
+use moka::policy::EvictionPolicy;
+
+static CACHE: LazyLock<Cache<ListParameters, Page<Topic>>> = LazyLock::new(|| {
+    Cache::builder()
+        .eviction_policy(EvictionPolicy::tiny_lfu())
+        .time_to_live(Duration::from_secs(30))
+        .max_capacity(10_000)
+        .build()
+});
 
 pub struct PettyMattersService<T, C, Q>
 where
@@ -47,7 +58,18 @@ where
     }
 
     pub async fn list_topics(&self, list_parameters: ListParameters) -> Result<Page<Topic>> {
-        self.topic_repository.list(list_parameters).await
+        if let Some(cached) = CACHE.get(&list_parameters).await {
+            return Ok(cached);
+        }
+        let results = self.topic_repository.list(list_parameters.clone()).await;
+
+        match results {
+            Ok(page) => {
+                CACHE.insert(list_parameters.clone(), page.clone()).await;
+                Ok(page)
+            }
+            Err(e) => Err(e),
+        }
     }
 
     pub async fn reply_to_topic(
@@ -67,7 +89,7 @@ where
         for_topic: &TopicId,
         mut list_parameters: ListParameters,
     ) -> Result<Page<Comment>> {
-        list_parameters.filters = Some(HashMap::from([(
+        list_parameters.filters = Some(BTreeMap::from([(
             "topic_id".to_string(),
             for_topic.to_string(),
         )]));

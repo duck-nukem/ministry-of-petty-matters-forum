@@ -16,7 +16,7 @@ use axum::response::{IntoResponse, Redirect, Response};
 use axum::routing::{get, post};
 use axum::{Form, Router};
 use serde::Deserialize;
-use std::collections::HashMap;
+use std::collections::BTreeMap;
 use std::sync::Arc;
 
 #[derive(Template)]
@@ -120,7 +120,7 @@ where
         page_number: PageNumber(1),
         order_by: None,
         ordering: None,
-        filters: Some(HashMap::from([(
+        filters: Some(BTreeMap::from([(
             "topic_id".to_string(),
             topic_id.to_string(),
         )])),

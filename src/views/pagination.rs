@@ -1,8 +1,8 @@
-use serde::Deserialize;
-use std::collections::HashMap;
 use crate::persistence::repository::{PageNumber, PageSize};
+use serde::Deserialize;
+use std::collections::BTreeMap;
 
-#[derive(Clone, Debug, Default, Deserialize)]
+#[derive(Clone, Debug, Default, Deserialize, Eq, Hash, PartialEq)]
 #[serde(rename_all = "lowercase")]
 pub enum Ordering {
     #[serde(alias = "asc")]
@@ -19,5 +19,5 @@ pub struct PageFilters {
     pub order_by: Option<String>,
     pub ordering: Option<Ordering>,
     #[serde(flatten)]
-    pub filters: HashMap<String, String>,
+    pub filters: BTreeMap<String, String>,
 }

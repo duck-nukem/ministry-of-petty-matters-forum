@@ -16,6 +16,22 @@ resource "digitalocean_database_firewall" "db_firewall" {
   }
 }
 
+resource "digitalocean_database_user" "app_user" {
+  cluster_id = digitalocean_database_cluster.main.id
+  name       = "app_user"
+}
+
+resource "digitalocean_database_connection_pool" "connection_pool" {
+  cluster_id = digitalocean_database_cluster.main.id
+
+  name    = "app_pool"
+  db_name = "defaultdb"
+  user    = "doadmin"  # use digitalocean_database_user.app_user
+
+  mode = "transaction"
+  size = 21
+}
+
 output "db_connection_string" {
-  value = digitalocean_database_cluster.main.uri
+  value = digitalocean_database_connection_pool.connection_pool.private_uri
 }

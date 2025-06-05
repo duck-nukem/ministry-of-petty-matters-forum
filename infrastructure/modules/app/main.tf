@@ -19,7 +19,7 @@ resource "digitalocean_app" "app_platform" {
         key   = "DATABASE_URL"
         value = digitalocean_database_cluster.main.uri
 
-        scope = "RUN_AND_BUILD_TIME"
+        scope = "RUN_TIME"
         type  = "SECRET"
       }
 
@@ -43,14 +43,20 @@ resource "digitalocean_app" "app_platform" {
 
       env {
         key   = "PUBLIC_ROOT_URL"
-        value = "https://production-hciwx.ondigitalocean.app"
+        value = "https://${var.label == "production" ? var.domain_name : "${var.label}.${var.domain_name}"}"
+        scope = "RUN_TIME"
+      }
+
+      env {
+        key   = "RUST_BACKTRACE"
+        value = "1"
         scope = "RUN_TIME"
       }
 
       env {
         key   = "DATABASE_URL"
-        value = digitalocean_database_cluster.main.uri
-        scope = "RUN_AND_BUILD_TIME"
+        value = digitalocean_database_connection_pool.connection_pool.uri
+        scope = "RUN_TIME"
         type  = "SECRET"
       }
 

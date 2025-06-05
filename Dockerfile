@@ -9,8 +9,11 @@ COPY . .
 RUN cargo build --release
 
 FROM gcr.io/distroless/cc AS runner
-COPY --from=builder /opt/app/target/release/ministry-of-petty-matters-forum /usr/bin/mopm
 
-ENV DATABASE_URL=postgres://postgres:password@localhost:5432/postgres
+WORKDIR /opt/app
+COPY --from=builder /opt/app/target/release/ministry-of-petty-matters-forum mopm
+COPY assets ./assets
+
+ENV DATABASE_URL=postgres://postgres:password@db:5432/postgres
 EXPOSE 3000
-CMD ["mopm"]
+CMD ["./mopm"]

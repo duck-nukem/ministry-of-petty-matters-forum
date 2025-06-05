@@ -1,4 +1,13 @@
 services:
+  app:
+    build: .
+    environment:
+      DATABASE_URL: "postgres://postgres:password@db:5432/postgres"
+    depends_on:
+      db:
+        condition: service_healthy
+    ports:
+      - "3000:3000"
   db:
     image: postgres:alpine
     environment:

@@ -79,6 +79,12 @@ where
         message: String,
         user: User,
     ) -> Result<(), QueueError> {
+        if message.is_empty() {
+            return Err(QueueError::InvalidInput(
+                "Comment body cannot be empty".to_string(),
+            ));
+        }
+
         let comment = Comment::new(*topic_id, message, user);
         self.write_queue
             .enqueue(WriteOperation::AddComment(comment))
@@ -105,22 +111,30 @@ mod tests {
     use crate::petty_matters::topic::Topic;
     use crate::queue::stub_queue::StubQueue;
 
-    #[tokio::test]
-    async fn test_start_topic_should_persist_a_topic() {
+    fn setup_service() -> PettyMattersService<
+        InMemoryRepository<TopicId, Topic>,
+        InMemoryRepository<CommentId, Comment>,
+        StubQueue,
+    > {
         let topic_repository = Arc::new(InMemoryRepository::new());
         let comment_repository = Arc::new(InMemoryRepository::new());
         let queue = StubQueue::new(topic_repository.clone(), comment_repository.clone());
-        let topic_service =
-            PettyMattersService::new(topic_repository, comment_repository, Arc::new(queue));
+
+        PettyMattersService::new(topic_repository, comment_repository, Arc::new(queue))
+    }
+
+    #[tokio::test]
+    async fn test_start_topic_should_persist_a_topic() {
+        let service = setup_service();
         let topic = Topic::default();
 
-        topic_service
+        service
             .create_topic(topic.clone())
             .await
             .expect("Failed to start topic");
 
         assert!(
-            topic_service
+            service
                 .get_topic(&topic.id)
                 .await
                 .is_ok_and(|result| result.is_some_and(|entity| entity == topic))
@@ -129,18 +143,14 @@ mod tests {
 
     #[tokio::test]
     async fn test_should_add_comment_to_a_topic() {
-        let topic_repository = Arc::new(InMemoryRepository::new());
-        let comment_repository = Arc::new(InMemoryRepository::new());
-        let queue = StubQueue::new(topic_repository.clone(), comment_repository.clone());
-        let topic_service =
-            PettyMattersService::new(topic_repository, comment_repository, Arc::new(queue));
+        let service = setup_service();
         let topic = Topic::default();
-        topic_service
+        service
             .create_topic(topic.clone())
             .await
             .expect("Failed to start topic");
 
-        topic_service
+        service
             .reply_to_topic(
                 &topic.id,
                 "This is a comment".to_string(),
@@ -150,7 +160,7 @@ mod tests {
             .expect("Failed to add comment");
 
         assert!(
-            topic_service
+            service
                 .list_comments(&topic.id, ListParameters::default())
                 .await
                 .is_ok_and(|result| result
@@ -161,24 +171,42 @@ mod tests {
     }
 
     #[tokio::test]
-    async fn test_should_only_return_comments_relevant_for_the_topic() {
-        let topic_repository = Arc::new(InMemoryRepository::new());
-        let comment_repository = Arc::new(InMemoryRepository::new());
-        let queue = StubQueue::new(topic_repository.clone(), comment_repository.clone());
-        let topic_service =
-            PettyMattersService::new(topic_repository, comment_repository, Arc::new(queue));
-        let unrelated_topic = Topic::default();
-        topic_service
-            .create_topic(unrelated_topic.clone())
-            .await
-            .expect("Failed to start topic");
+    async fn test_should_refuse_to_add_comments_without_a_body() {
+        let service = setup_service();
         let topic = Topic::default();
-        topic_service
+        service
             .create_topic(topic.clone())
             .await
             .expect("Failed to start topic");
 
-        topic_service
+        let result = service
+            .reply_to_topic(&topic.id, String::new(), User::anonymous())
+            .await;
+
+        assert!(matches!(result, Err(QueueError::InvalidInput(_))));
+        assert!(
+            service
+                .list_comments(&topic.id, ListParameters::default())
+                .await
+                .is_ok_and(|topic_comments| topic_comments.items.len() == 0)
+        );
+    }
+
+    #[tokio::test]
+    async fn test_should_only_return_comments_relevant_for_the_topic() {
+        let service = setup_service();
+        let unrelated_topic = Topic::default();
+        service
+            .create_topic(unrelated_topic.clone())
+            .await
+            .expect("Failed to start topic");
+        let topic = Topic::default();
+        service
+            .create_topic(topic.clone())
+            .await
+            .expect("Failed to start topic");
+
+        service
             .reply_to_topic(
                 &unrelated_topic.id,
                 "This is a comment".to_string(),
@@ -188,7 +216,7 @@ mod tests {
             .expect("Failed to add comment");
 
         assert!(
-            topic_service
+            service
                 .list_comments(&topic.id, ListParameters::default())
                 .await
                 .is_ok_and(|result| result.items.is_empty())

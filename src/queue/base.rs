@@ -9,10 +9,11 @@ pub enum WriteOperation {
     AddComment(Comment),
 }
 
-#[derive(Debug)]
+#[derive(Debug, Eq, PartialEq)]
 pub enum QueueError {
     SendError(String),
     OperationFailed(String),
+    InvalidInput(String),
 }
 
 impl Display for QueueError {
@@ -20,6 +21,7 @@ impl Display for QueueError {
         match self {
             Self::SendError(msg) => write!(f, "Send error: {msg}"),
             Self::OperationFailed(msg) => write!(f, "Operation failed: {msg}"),
+            Self::InvalidInput(msg) => write!(f, "Invalid data provided: {msg}"),
         }
     }
 }

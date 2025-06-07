@@ -7,7 +7,7 @@ use serde::Deserialize;
 use std::fmt::{Display, Formatter};
 use uuid::Uuid;
 
-#[derive(Clone, Debug, Deserialize, Eq, PartialEq, Hash)]
+#[derive(Clone, Copy, Debug, Deserialize, Eq, PartialEq, Hash)]
 pub struct CommentId(pub Uuid);
 
 impl Display for CommentId {
@@ -45,7 +45,7 @@ impl Comment {
 
 impl HasId<CommentId> for Comment {
     fn id(&self) -> CommentId {
-        self.id.clone()
+        self.id
     }
 }
 
@@ -54,8 +54,8 @@ impl FilterableAttributes for Comment {
 
     fn get_field_value(&self, field: &str) -> Self::Output {
         match field {
-            "id" => Some(self.id.clone().to_string()),
-            "topic_id" => Some(self.topic_id.clone().to_string()),
+            "id" => Some(self.id.to_string()),
+            "topic_id" => Some(self.topic_id.to_string()),
             _ => None,
         }
     }

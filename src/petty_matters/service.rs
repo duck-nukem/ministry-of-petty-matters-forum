@@ -78,7 +78,7 @@ where
         message: String,
         user: User,
     ) -> std::result::Result<(), QueueError> {
-        let comment = Comment::new(topic_id.clone(), message, user);
+        let comment = Comment::new(*topic_id, message, user);
         self.write_queue
             .enqueue(WriteOperation::AddComment(comment))
             .await

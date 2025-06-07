@@ -6,7 +6,7 @@ use serde::Deserialize;
 use std::fmt::{Display, Formatter};
 use uuid::Uuid;
 
-#[derive(Clone, Debug, Deserialize, Eq, PartialEq, Hash)]
+#[derive(Clone, Copy, Debug, Deserialize, Eq, PartialEq, Hash)]
 pub struct TopicId(pub Uuid);
 
 impl From<&String> for TopicId {
@@ -66,7 +66,7 @@ impl Topic {
 
 impl HasId<TopicId> for Topic {
     fn id(&self) -> TopicId {
-        self.id.clone()
+        self.id
     }
 }
 
@@ -75,7 +75,7 @@ impl FilterableAttributes for Topic {
 
     fn get_field_value(&self, field: &str) -> Self::Output {
         match field {
-            "id" => Some(self.id.clone().to_string()),
+            "id" => Some(self.id.to_string()),
             _ => None,
         }
     }

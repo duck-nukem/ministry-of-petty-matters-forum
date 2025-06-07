@@ -2,7 +2,7 @@ use crate::authn::session::{User, Username};
 use crate::persistence::in_memory_repository::FilterableAttributes;
 use crate::persistence::repository::HasId;
 use chrono::{DateTime, Utc};
-use serde::{Deserialize};
+use serde::Deserialize;
 use std::fmt::{Display, Formatter};
 use uuid::Uuid;
 
@@ -72,8 +72,8 @@ impl HasId<TopicId> for Topic {
 
 impl FilterableAttributes for Topic {
     type Output = Option<String>;
-    
-    fn get_field_value(&self, field: &str) ->Self::Output {
+
+    fn get_field_value(&self, field: &str) -> Self::Output {
         match field {
             "id" => Some(self.id.clone().to_string()),
             _ => None,

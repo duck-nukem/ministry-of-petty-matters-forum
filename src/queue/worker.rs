@@ -1,9 +1,9 @@
-use std::sync::Arc;
-use tokio::sync::mpsc::Receiver;
 use crate::persistence::repository::Repository;
 use crate::petty_matters::comment::{Comment, CommentId};
 use crate::petty_matters::topic::{Topic, TopicId};
 use crate::queue::base::{QueueError, WriteOperation};
+use std::sync::Arc;
+use tokio::sync::mpsc::Receiver;
 
 pub async fn start_write_worker(
     mut receiver: Receiver<WriteOperation>,

@@ -94,7 +94,7 @@ mod tests {
 
     impl FilterableAttributes for StubEntity {
         type Output = Option<String>;
-        
+
         fn get_field_value(&self, _field: &str) -> Self::Output {
             None
         }
@@ -180,6 +180,6 @@ mod tests {
 /// Used by in-memory repositories to perform filtering
 pub trait FilterableAttributes {
     type Output;
-    
+
     fn get_field_value(&self, field: &str) -> Self::Output;
 }

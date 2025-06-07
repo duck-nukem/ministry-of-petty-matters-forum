@@ -1,7 +1,7 @@
-use std::fmt::Display;
-use async_trait::async_trait;
 use crate::petty_matters::comment::Comment;
 use crate::petty_matters::topic::Topic;
+use async_trait::async_trait;
+use std::fmt::Display;
 
 #[derive(Debug)]
 pub enum WriteOperation {

@@ -1,10 +1,12 @@
 use crate::authn::oauth::config::OAuthProvider;
 use crate::authn::oauth::token::validate_token;
 use crate::authn::session::{User, Username};
+use crate::config::APP_CONFIG;
 use crate::error::AnyError;
-use crate::render_template;
-use crate::views::templates::HtmlResponse;
 use crate::error::notify_maintainers_on_error;
+use crate::render_template;
+use crate::templates::Nonce;
+use crate::views::templates::HtmlResponse;
 use askama::Template;
 use axum::http::header::SET_COOKIE;
 use axum::http::{HeaderValue, StatusCode};
@@ -12,8 +14,6 @@ use axum::response::{IntoResponse, Redirect, Response};
 use axum::routing::{get, post};
 use axum::{Form, Router};
 use serde::{Deserialize, Serialize};
-use crate::config::APP_CONFIG;
-use crate::templates::Nonce;
 
 #[derive(Template)]
 #[template(path = "authn/login.html")]
@@ -24,7 +24,11 @@ pub struct LoginPage {
 }
 
 async fn render_login_view(nonce: Nonce, user: User) -> Result<HtmlResponse, StatusCode> {
-    let template = render_template!(LoginPage {root: APP_CONFIG.public_root_url.clone(), nonce, user});
+    let template = render_template!(LoginPage {
+        root: APP_CONFIG.public_root_url.clone(),
+        nonce,
+        user
+    });
     Ok(HtmlResponse::from_string(template))
 }
 
@@ -42,9 +46,12 @@ async fn oauth_callback(Form(body): Form<OauthResponse>) -> Response {
         }
     };
     let Some(email) = claims.email else {
-        return handle_authentication_failure(provider, &AnyError::from("e-mail was not present in the token"));
+        return handle_authentication_failure(
+            provider,
+            &AnyError::from("e-mail was not present in the token"),
+        );
     };
-    let user = User::new(Username(email),  claims.exp);
+    let user = User::new(Username(email), claims.exp);
     let session_cookie = match user.into_cookie() {
         Ok(cookie) => cookie,
         Err(e) => {
@@ -82,7 +89,10 @@ fn delete_cookies(cookie_names: Vec<&str>, response: &mut Response) {
 
 async fn perform_logout() -> Result<Response, StatusCode> {
     let mut response = Redirect::to("/").into_response();
-    delete_cookies(OAuthProvider::Google.get_session_cookie_names(), &mut response);
+    delete_cookies(
+        OAuthProvider::Google.get_session_cookie_names(),
+        &mut response,
+    );
 
     Ok(response)
 }

@@ -1,9 +1,9 @@
-use std::sync::Arc;
-use async_trait::async_trait;
 use crate::persistence::repository::Repository;
 use crate::petty_matters::comment::{Comment, CommentId};
 use crate::petty_matters::topic::{Topic, TopicId};
 use crate::queue::base::{Queue, QueueError, WriteOperation};
+use async_trait::async_trait;
+use std::sync::Arc;
 
 #[derive(Clone)]
 pub struct StubQueue {
@@ -28,18 +28,16 @@ impl StubQueue {
 impl Queue for StubQueue {
     async fn enqueue(&self, op: WriteOperation) -> Result<(), QueueError> {
         match op {
-            WriteOperation::CreateTopic(topic) => {
-                self.topic_repository
-                    .save(topic)
-                    .await
-                    .map_err(|e| QueueError::OperationFailed(e.to_string()))
-            }
-            WriteOperation::AddComment(comment) => {
-                self.comment_repository
-                    .save(comment)
-                    .await
-                    .map_err(|e| QueueError::OperationFailed(e.to_string()))
-            }
+            WriteOperation::CreateTopic(topic) => self
+                .topic_repository
+                .save(topic)
+                .await
+                .map_err(|e| QueueError::OperationFailed(e.to_string())),
+            WriteOperation::AddComment(comment) => self
+                .comment_repository
+                .save(comment)
+                .await
+                .map_err(|e| QueueError::OperationFailed(e.to_string())),
         }
     }
 }

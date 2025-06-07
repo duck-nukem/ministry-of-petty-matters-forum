@@ -5,10 +5,10 @@ use crate::petty_matters::comment::{Comment, CommentId};
 use crate::petty_matters::topic::{Topic, TopicId};
 use crate::queue::base::{Queue, QueueError, WriteOperation};
 use moka::future::Cache;
+use moka::policy::EvictionPolicy;
 use std::collections::BTreeMap;
 use std::sync::{Arc, LazyLock};
 use std::time::Duration;
-use moka::policy::EvictionPolicy;
 
 static CACHE: LazyLock<Cache<ListParameters, Page<Topic>>> = LazyLock::new(|| {
     Cache::builder()

@@ -1,6 +1,6 @@
 use crate::authn::oauth::config::{OAuthConfig, OAuthProvider};
 use crate::authn::oauth::errors::TokenValidationError;
-use jsonwebtoken::{decode, decode_header, Algorithm, DecodingKey, Validation};
+use jsonwebtoken::{Algorithm, DecodingKey, Validation, decode, decode_header};
 use reqwest::Client;
 use serde::Deserialize;
 use std::collections::HashSet;

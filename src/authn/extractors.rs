@@ -1,8 +1,8 @@
-use crate::authn::session::{decode_user_data, User, SESSION_COOKIE_NAME};
+use crate::authn::session::{SESSION_COOKIE_NAME, User, decode_user_data};
 use axum::extract::FromRequestParts;
+use axum::http::StatusCode;
 use axum::http::header::COOKIE;
 use axum::http::request::Parts;
-use axum::http::StatusCode;
 
 static COOKIE_SEPARATOR: &str = ";";
 

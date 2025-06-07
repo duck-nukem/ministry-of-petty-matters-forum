@@ -1,7 +1,7 @@
 use crate::config::APP_CONFIG;
 use crate::error::Result;
 use crate::time::{Days, Seconds, TimeUnit};
-use jsonwebtoken::{decode, encode, Algorithm, DecodingKey, EncodingKey, Header, Validation};
+use jsonwebtoken::{Algorithm, DecodingKey, EncodingKey, Header, Validation, decode, encode};
 use serde::{Deserialize, Serialize};
 use std::fmt::Display;
 use std::sync::LazyLock;
@@ -16,9 +16,7 @@ static ENCODING_KEY: LazyLock<EncodingKey> = LazyLock::new(|| {
 static DECODING_KEY: LazyLock<DecodingKey> = LazyLock::new(|| {
     DecodingKey::from_base64_secret(&APP_CONFIG.secret).expect("Failed to create decoding key")
 });
-static TOKEN_LIFETIME: LazyLock<Seconds> = LazyLock::new(|| {
-    Days(14).to_seconds()
-});
+static TOKEN_LIFETIME: LazyLock<Seconds> = LazyLock::new(|| Days(14).to_seconds());
 
 #[derive(Clone, Debug, Eq, PartialEq, Serialize, Deserialize)]
 pub struct Username(pub String);

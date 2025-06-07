@@ -1,4 +1,4 @@
-pub mod views;
+pub mod extractors;
 pub mod oauth;
 pub mod session;
-pub mod extractors;
+pub mod views;

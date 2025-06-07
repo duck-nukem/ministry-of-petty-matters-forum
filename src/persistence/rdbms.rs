@@ -3,9 +3,7 @@ use crate::views::pagination::Ordering;
 use async_trait::async_trait;
 use sea_orm::sea_query::Expr;
 use sea_orm::{Condition, DatabaseConnection, DeriveColumn, EntityTrait, EnumIter};
-use sea_orm::{
-    IntoActiveModel, Order, PrimaryKeyTrait, QueryFilter, QueryOrder, QuerySelect,
-};
+use sea_orm::{IntoActiveModel, Order, PrimaryKeyTrait, QueryFilter, QueryOrder, QuerySelect};
 
 pub trait ModelDatabaseInterface<E: EntityTrait, M, Id> {
     fn filter_from_params(list_parameters: &ListParameters) -> Condition;
@@ -57,9 +55,8 @@ where
 {
     #[allow(clippy::cast_possible_wrap, clippy::cast_sign_loss)]
     async fn list(&self, list_parameters: ListParameters) -> crate::error::Result<Page<ModelType>> {
-        let resulting_rows = DbRecord::find().filter(
-            DbRecord::filter_from_params(&list_parameters),
-        );
+        let resulting_rows =
+            DbRecord::find().filter(DbRecord::filter_from_params(&list_parameters));
         // Workaround: .count() is ambiguous, it wants to use an iterable count
         let count: Option<i64> = resulting_rows
             .clone()

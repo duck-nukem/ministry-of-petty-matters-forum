@@ -1,4 +1,6 @@
-use crate::authn::oauth::providers::google::{GOOGLE_OAUTH_CERTS_URL, GOOGLE_OAUTH_CLIENT_ID, GOOGLE_OAUTH_ISSUER};
+use crate::authn::oauth::providers::google::{
+    GOOGLE_OAUTH_CERTS_URL, GOOGLE_OAUTH_CLIENT_ID, GOOGLE_OAUTH_ISSUER,
+};
 use crate::authn::session::SESSION_COOKIE_NAME;
 
 #[derive(Copy, Clone)]

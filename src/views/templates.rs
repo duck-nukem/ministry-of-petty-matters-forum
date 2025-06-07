@@ -1,10 +1,10 @@
-use askama::Template;
-use axum::response::{Html, IntoResponse, Response};
-use axum::http::{header, StatusCode};
 use crate::error::AnyError;
 use crate::templates::Nonce;
 use crate::time::Seconds;
 use crate::{error, render_template};
+use askama::Template;
+use axum::http::{StatusCode, header};
+use axum::response::{Html, IntoResponse, Response};
 
 pub struct HtmlResponse {
     pub response: Html<String>,
@@ -65,7 +65,9 @@ where
     E: Into<AnyError>,
 {
     error::notify_maintainers_on_error(&error.into());
-    let response = render_template!(InternalServerErrorPage { nonce: Nonce::new() });
+    let response = render_template!(InternalServerErrorPage {
+        nonce: Nonce::new()
+    });
 
     Ok(HtmlResponse {
         response: Html(response),
@@ -75,7 +77,9 @@ where
 }
 
 pub fn show_not_found_page() -> Result<HtmlResponse, StatusCode> {
-    let response = render_template!(NotFoundErrorPage { nonce: Nonce::new() });
+    let response = render_template!(NotFoundErrorPage {
+        nonce: Nonce::new()
+    });
 
     Ok(HtmlResponse {
         response: Html(response),

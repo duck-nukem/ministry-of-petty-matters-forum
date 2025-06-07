@@ -1,11 +1,11 @@
+use crate::authn::session::{User, Username};
+use crate::persistence::in_memory_repository::FilterableAttributes;
+use crate::persistence::repository::HasId;
 use crate::petty_matters::topic::TopicId;
 use chrono::{DateTime, Utc};
 use serde::Deserialize;
 use std::fmt::{Display, Formatter};
 use uuid::Uuid;
-use crate::authn::session::{User, Username};
-use crate::persistence::repository::HasId;
-use crate::persistence::in_memory_repository::FilterableAttributes;
 
 #[derive(Clone, Debug, Deserialize, Eq, PartialEq, Hash)]
 pub struct CommentId(pub Uuid);
@@ -27,7 +27,6 @@ pub struct Comment {
     pub creation_time: DateTime<Utc>,
     pub last_updated_time: Option<DateTime<Utc>>,
 }
-
 
 impl Comment {
     pub(crate) fn new(topic_id: TopicId, content: String, author: User) -> Self {
@@ -52,7 +51,7 @@ impl HasId<CommentId> for Comment {
 
 impl FilterableAttributes for Comment {
     type Output = Option<String>;
-    
+
     fn get_field_value(&self, field: &str) -> Self::Output {
         match field {
             "id" => Some(self.id.clone().to_string()),

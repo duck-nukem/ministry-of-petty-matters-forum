@@ -33,7 +33,6 @@ async fn main() {
     println!("Starting up");
     let mut connection_options = ConnectOptions::new(APP_CONFIG.database_url.clone());
     connection_options
-        .max_connections(200)
         .min_connections(5)
         .max_connections(20)
         .connect_timeout(Duration::from_secs(5))

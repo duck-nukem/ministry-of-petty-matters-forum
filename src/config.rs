@@ -4,7 +4,7 @@ use std::sync::LazyLock;
 pub struct Config {
     pub public_root_url: String,
     pub host: String,
-    pub port: String,
+    pub port: u16,
     pub secret: String,
     pub database_url: String,
 }
@@ -21,7 +21,10 @@ pub static APP_CONFIG: LazyLock<Config> = LazyLock::new(|| {
     let public_root_url =
         env::var("PUBLIC_ROOT_URL").unwrap_or_else(|_| "http://localhost:3000".to_string());
     let host = env::var("APPLICATION_HOST").unwrap_or_else(|_| "0.0.0.0".to_string());
-    let port = env::var("APPLICATION_PORT").unwrap_or_else(|_| "3000".to_string());
+    let port = env::var("APPLICATION_PORT")
+        .unwrap_or_else(|_| "3000".to_string())
+        .parse()
+        .unwrap_or(3000);
     let secret = env::var("JWT_SECRET").unwrap_or_else(|_| DEVELOPMENT_ENCRYPTION_KEY.to_string());
     let database_url = env::var("DATABASE_URL")
         .unwrap_or_else(|_| String::from("postgres://postgres:password@localhost:5432/postgres"));

@@ -92,9 +92,10 @@ where
 
     #[allow(clippy::cast_possible_wrap)]
     async fn save(&self, entity: ModelType) -> Result<(), RepositoryError> {
-        let active_model: DbRecord::ActiveModel = DbRecord::model_to_record(entity.clone());
+        let id = entity.id();
+        let active_model: DbRecord::ActiveModel = DbRecord::model_to_record(entity);
 
-        if let Some(_id_already_exists) = &self.get_by_id(&entity.id()).await? {
+        if let Some(_id_already_exists) = &self.get_by_id(&id).await? {
             DbRecord::update(active_model).exec(&self.db).await?;
         } else {
             DbRecord::insert(active_model).exec(&self.db).await?;
@@ -105,14 +106,11 @@ where
 
     #[allow(clippy::cast_sign_loss)]
     async fn get_by_id(&self, id: &Id) -> Result<Option<ModelType>, RepositoryError> {
-        match DbRecord::find_by_id(DbRecord::id_to_primary_key(id))
+        DbRecord::find_by_id(DbRecord::id_to_primary_key(id))
             .one(&self.db)
             .await
-        {
-            Ok(Some(record)) => Ok(Some(DbRecord::model_from_record(record))),
-            Ok(None) => Ok(None),
-            Err(e) => Err(e.into()),
-        }
+            .map(|record| record.map(DbRecord::model_from_record))
+            .map_err(|e| RepositoryError::GenericError(e.to_string()))
     }
 
     async fn delete(&self, id: &Id) -> Result<(), RepositoryError> {

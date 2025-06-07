@@ -61,9 +61,8 @@ where
         if let Some(cached) = CACHE.get(&list_parameters).await {
             return Ok(cached);
         }
-        let results = self.topic_repository.list(list_parameters.clone()).await;
 
-        match results {
+        match self.topic_repository.list(list_parameters.clone()).await {
             Ok(page) => {
                 CACHE.insert(list_parameters, page.clone()).await;
                 Ok(page)

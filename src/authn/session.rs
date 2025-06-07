@@ -1,5 +1,5 @@
 use crate::config::APP_CONFIG;
-use crate::error::Result;
+use crate::error::AnyError;
 use crate::time::{Days, Seconds, TimeUnit};
 use jsonwebtoken::{Algorithm, DecodingKey, EncodingKey, Header, Validation, decode, encode};
 use serde::{Deserialize, Serialize};
@@ -51,14 +51,16 @@ impl Display for User {
 }
 
 impl User {
-    pub fn into_cookie(self) -> Result<String> {
+    pub fn into_cookie(self) -> Result<String, AnyError> {
         let token = encode_user_data(&self)?;
         let lifetime = TOKEN_LIFETIME.to_string();
-        Ok(format!(
+        let cookie_header = format!(
             "{SESSION_COOKIE_NAME}={token}; \
             Max-Age={lifetime}; Path=/; \
             HttpOnly; SameSite=Lax"
-        ))
+        );
+
+        Ok(cookie_header)
     }
 
     pub const fn new(email: Username, expires_at: usize) -> Self {

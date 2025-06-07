@@ -3,7 +3,7 @@ repos:
     hooks:
       - id: fmt
         name: fmt
-        entry: cargo fmt --all -- --check --color always
+        entry: cargo fmt --all -- --color always
         language: system
         pass_filenames: false
   - repo: local

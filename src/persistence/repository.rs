@@ -1,9 +1,10 @@
-use crate::error::Result;
 use crate::views::pagination::{Ordering, PageFilters};
 use async_trait::async_trait;
 use axum::extract::Query;
 use serde::Deserialize;
 use std::collections::BTreeMap;
+use std::error::Error;
+use std::fmt::Display;
 use std::hash::Hash;
 
 #[derive(Clone, Debug, Copy, Default, Deserialize, Eq, PartialEq, Hash)]
@@ -83,6 +84,27 @@ impl<T> Page<T> {
     }
 }
 
+#[derive(Clone, Debug, PartialEq, Eq)]
+pub enum RepositoryError {
+    GenericError(String),
+}
+
+impl Display for RepositoryError {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        match self {
+            Self::GenericError(msg) => write!(f, "Repository error: {msg}"),
+        }
+    }
+}
+
+impl Error for RepositoryError {
+    fn source(&self) -> Option<&(dyn std::error::Error + 'static)> {
+        match self {
+            Self::GenericError(_) => None,
+        }
+    }
+}
+
 #[async_trait]
 #[allow(dead_code)]
 pub trait Repository<ID, Entity>
@@ -90,10 +112,10 @@ where
     ID: Send + Sync,
     Entity: Send + Sync + HasId<ID>,
 {
-    async fn list(&self, list_parameters: ListParameters) -> Result<Page<Entity>>;
-    async fn save(&self, entity: Entity) -> Result<()>;
-    async fn get_by_id(&self, id: &ID) -> Result<Option<Entity>>;
-    async fn delete(&self, id: &ID) -> Result<()>;
+    async fn list(&self, list_parameters: ListParameters) -> Result<Page<Entity>, RepositoryError>;
+    async fn save(&self, entity: Entity) -> Result<(), RepositoryError>;
+    async fn get_by_id(&self, id: &ID) -> Result<Option<Entity>, RepositoryError>;
+    async fn delete(&self, id: &ID) -> Result<(), RepositoryError>;
 }
 
 pub trait HasId<ID> {

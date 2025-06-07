@@ -1,5 +1,4 @@
-use crate::error::Result;
-use crate::persistence::repository::{HasId, ListParameters, Page, Repository};
+use crate::persistence::repository::{HasId, ListParameters, Page, Repository, RepositoryError};
 use async_trait::async_trait;
 use std::collections::HashMap;
 use std::hash::Hash;
@@ -29,7 +28,7 @@ where
     Entity: Send + Sync + Clone + HasId<ID> + FilterableAttributes<Output = Option<String>>,
 {
     #[allow(clippy::significant_drop_tightening)]
-    async fn list(&self, list_parameters: ListParameters) -> Result<Page<Entity>> {
+    async fn list(&self, list_parameters: ListParameters) -> Result<Page<Entity>, RepositoryError> {
         let offset = list_parameters.calculate_offset();
         let collection = self.store.lock().await;
         let key_value_pairs = collection.values();
@@ -53,16 +52,16 @@ where
         Ok(page)
     }
 
-    async fn save(&self, entity: Entity) -> Result<()> {
+    async fn save(&self, entity: Entity) -> Result<(), RepositoryError> {
         self.store.lock().await.insert(entity.id(), entity);
         Ok(())
     }
 
-    async fn get_by_id(&self, id: &ID) -> Result<Option<Entity>> {
+    async fn get_by_id(&self, id: &ID) -> Result<Option<Entity>, RepositoryError> {
         Ok(self.store.lock().await.get(id).cloned())
     }
 
-    async fn delete(&self, id: &ID) -> Result<()> {
+    async fn delete(&self, id: &ID) -> Result<(), RepositoryError> {
         self.store.lock().await.remove(id);
         Ok(())
     }

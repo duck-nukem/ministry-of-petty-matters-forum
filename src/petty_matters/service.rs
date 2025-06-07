@@ -1,6 +1,5 @@
 use crate::authn::session::User;
-use crate::error::Result;
-use crate::persistence::repository::{ListParameters, Page, Repository};
+use crate::persistence::repository::{ListParameters, Page, Repository, RepositoryError};
 use crate::petty_matters::comment::{Comment, CommentId};
 use crate::petty_matters::topic::{Topic, TopicId};
 use crate::queue::base::{Queue, QueueError, WriteOperation};
@@ -47,17 +46,20 @@ where
         }
     }
 
-    pub async fn create_topic(&self, topic: Topic) -> std::result::Result<(), QueueError> {
+    pub async fn create_topic(&self, topic: Topic) -> Result<(), QueueError> {
         self.write_queue
             .enqueue(WriteOperation::CreateTopic(topic))
             .await
     }
 
-    pub async fn get_topic(&self, topic_id: &TopicId) -> Result<Option<Topic>> {
+    pub async fn get_topic(&self, topic_id: &TopicId) -> Result<Option<Topic>, RepositoryError> {
         self.topic_repository.get_by_id(topic_id).await
     }
 
-    pub async fn list_topics(&self, list_parameters: ListParameters) -> Result<Page<Topic>> {
+    pub async fn list_topics(
+        &self,
+        list_parameters: ListParameters,
+    ) -> Result<Page<Topic>, RepositoryError> {
         if let Some(cached) = CACHE.get(&list_parameters).await {
             return Ok(cached);
         }
@@ -76,7 +78,7 @@ where
         topic_id: &TopicId,
         message: String,
         user: User,
-    ) -> std::result::Result<(), QueueError> {
+    ) -> Result<(), QueueError> {
         let comment = Comment::new(*topic_id, message, user);
         self.write_queue
             .enqueue(WriteOperation::AddComment(comment))
@@ -87,7 +89,7 @@ where
         &self,
         for_topic: &TopicId,
         mut list_parameters: ListParameters,
-    ) -> Result<Page<Comment>> {
+    ) -> Result<Page<Comment>, RepositoryError> {
         list_parameters.filters = Some(BTreeMap::from([(
             "topic_id".to_string(),
             for_topic.to_string(),

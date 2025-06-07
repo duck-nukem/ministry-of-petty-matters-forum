@@ -1,8 +1,8 @@
-use crate::persistence::repository::{HasId, ListParameters, Page, Repository};
+use crate::persistence::repository::{HasId, ListParameters, Page, Repository, RepositoryError};
 use crate::views::pagination::Ordering;
 use async_trait::async_trait;
 use sea_orm::sea_query::Expr;
-use sea_orm::{Condition, DatabaseConnection, DeriveColumn, EntityTrait, EnumIter};
+use sea_orm::{Condition, DatabaseConnection, DbErr, DeriveColumn, EntityTrait, EnumIter};
 use sea_orm::{IntoActiveModel, Order, PrimaryKeyTrait, QueryFilter, QueryOrder, QuerySelect};
 
 pub trait ModelDatabaseInterface<E: EntityTrait, M, Id> {
@@ -41,6 +41,12 @@ impl<E> RdbmsRepository<E> {
     }
 }
 
+impl From<DbErr> for RepositoryError {
+    fn from(err: DbErr) -> Self {
+        Self::GenericError(err.to_string())
+    }
+}
+
 #[async_trait]
 impl<DbRecord, Id, ModelType> Repository<Id, ModelType> for RdbmsRepository<DbRecord>
 where
@@ -54,7 +60,10 @@ where
     <DbRecord as EntityTrait>::ActiveModel: Send + 'static,
 {
     #[allow(clippy::cast_possible_wrap, clippy::cast_sign_loss)]
-    async fn list(&self, list_parameters: ListParameters) -> crate::error::Result<Page<ModelType>> {
+    async fn list(
+        &self,
+        list_parameters: ListParameters,
+    ) -> Result<Page<ModelType>, RepositoryError> {
         let resulting_rows =
             DbRecord::find().filter(DbRecord::filter_from_params(&list_parameters));
         // Workaround: .count() is ambiguous, it wants to use an iterable count
@@ -82,7 +91,7 @@ where
     }
 
     #[allow(clippy::cast_possible_wrap)]
-    async fn save(&self, entity: ModelType) -> crate::error::Result<()> {
+    async fn save(&self, entity: ModelType) -> Result<(), RepositoryError> {
         let active_model: DbRecord::ActiveModel = DbRecord::model_to_record(entity.clone());
 
         if let Some(_id_already_exists) = &self.get_by_id(&entity.id()).await? {
@@ -95,17 +104,18 @@ where
     }
 
     #[allow(clippy::cast_sign_loss)]
-    async fn get_by_id(&self, id: &Id) -> crate::error::Result<Option<ModelType>> {
+    async fn get_by_id(&self, id: &Id) -> Result<Option<ModelType>, RepositoryError> {
         match DbRecord::find_by_id(DbRecord::id_to_primary_key(id))
             .one(&self.db)
             .await
         {
             Ok(Some(record)) => Ok(Some(DbRecord::model_from_record(record))),
-            Ok(None) | Err(_) => Ok(None),
+            Ok(None) => Ok(None),
+            Err(e) => Err(e.into()),
         }
     }
 
-    async fn delete(&self, id: &Id) -> crate::error::Result<()> {
+    async fn delete(&self, id: &Id) -> Result<(), RepositoryError> {
         DbRecord::delete_by_id(DbRecord::id_to_primary_key(id))
             .exec(&self.db)
             .await?;

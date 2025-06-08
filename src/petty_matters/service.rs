@@ -1,13 +1,23 @@
 use crate::authn::session::User;
+use crate::error::AnyError;
+use crate::feature_flags::FEATURE_FLAGS;
+use crate::persistence::in_memory_repository::InMemoryRepository;
+use crate::persistence::rdbms::RdbmsRepository;
 use crate::persistence::repository::{ListParameters, Page, Repository, RepositoryError};
 use crate::petty_matters::comment::{Comment, CommentId};
+use crate::petty_matters::comment_repository::Entity as CommentDbModel;
 use crate::petty_matters::topic::{Topic, TopicId};
+use crate::petty_matters::topic_repository::Entity as TopicDbModel;
 use crate::queue::base::{Queue, QueueError, WriteOperation};
+use crate::queue::in_memory_queue::WriteQueue;
+use crate::queue::worker::start_write_worker;
 use moka::future::Cache;
 use moka::policy::EvictionPolicy;
+use sea_orm::{DatabaseConnection, DbErr};
 use std::collections::BTreeMap;
 use std::sync::{Arc, LazyLock};
 use std::time::Duration;
+use tokio::sync::mpsc::channel;
 
 static CACHE: LazyLock<Cache<ListParameters, Page<Topic>>> = LazyLock::new(|| {
     Cache::builder()
@@ -98,6 +108,57 @@ where
         )]));
         self.comment_repository.list(list_parameters).await
     }
+}
+
+pub fn petty_matters_service_factory(
+    db_connection: Result<DatabaseConnection, DbErr>,
+) -> Result<Arc<PettyMattersService<WriteQueue>>, AnyError> {
+    println!("Instantiating Petty Matters service");
+
+    let topic_repository: Arc<dyn Repository<TopicId, Topic> + Send + Sync>;
+    let comment_repository: Arc<dyn Repository<CommentId, Comment> + Send + Sync>;
+    match db_connection {
+        Ok(db) => {
+            println!("Connection established");
+            topic_repository = Arc::new(RdbmsRepository::<TopicDbModel>::new(db.clone()));
+            comment_repository = Arc::new(RdbmsRepository::<CommentDbModel>::new(db));
+        }
+        Err(e) => {
+            if FEATURE_FLAGS.is_ephemeral_db_allowed {
+                eprintln!(
+                    "Database connection failed: {e},
+                    using in-memory repositories as fallback.
+                    If you'd like to disallow the fallback behavior,
+                    set the EPHEMERAL_DB_ALLOWED environment variable to false."
+                );
+                topic_repository = Arc::new(InMemoryRepository::<TopicId, Topic>::new());
+                comment_repository = Arc::new(InMemoryRepository::<CommentId, Comment>::new());
+            } else {
+                eprintln!(
+                    "Database connection failed: {e}
+                    and ephemeral DB is not allowed, exiting.
+                    To allow the application to run with an in-memory database,
+                    set the EPHEMERAL_DB_ALLOWED environment variable to true."
+                );
+                return Err(e.into());
+            }
+        }
+    }
+
+    let (tx, rx) = channel(100);
+    tokio::spawn(start_write_worker(
+        rx,
+        topic_repository.clone(),
+        comment_repository.clone(),
+    ));
+    let topic_service = Arc::new(PettyMattersService::new(
+        topic_repository,
+        comment_repository,
+        Arc::new(WriteQueue::new(tx)),
+    ));
+    println!("Service configuration done");
+
+    Ok(topic_service)
 }
 
 #[cfg(test)]

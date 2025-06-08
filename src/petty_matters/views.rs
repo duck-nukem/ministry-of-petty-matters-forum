@@ -148,7 +148,7 @@ where
     Ok(Redirect::to(&format!("/petty-matters/{topic_id}")))
 }
 
-pub fn topics_router<Q>(service: Arc<PettyMattersService<Q>>) -> Router
+pub fn petty_matters_router<Q>(service: Arc<PettyMattersService<Q>>) -> Router
 where
     Q: Queue + Send + Sync + 'static,
 {

@@ -30,12 +30,12 @@ impl Queue for StubQueue {
         match op {
             WriteOperation::CreateTopic(topic) => self
                 .topic_repository
-                .save(topic)
+                .create(topic)
                 .await
                 .map_err(|e| QueueError::OperationFailed(e.to_string())),
             WriteOperation::AddComment(comment) => self
                 .comment_repository
-                .save(comment)
+                .create(comment)
                 .await
                 .map_err(|e| QueueError::OperationFailed(e.to_string())),
         }

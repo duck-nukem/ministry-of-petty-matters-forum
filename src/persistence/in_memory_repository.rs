@@ -52,7 +52,7 @@ where
         Ok(page)
     }
 
-    async fn save(&self, entity: Entity) -> Result<(), RepositoryError> {
+    async fn create(&self, entity: Entity) -> Result<(), RepositoryError> {
         self.store.lock().await.insert(entity.id(), entity);
         Ok(())
     }
@@ -104,7 +104,7 @@ mod tests {
         let repository: InMemoryRepository<StubId, StubEntity> = InMemoryRepository::new();
         let stub_entity = StubEntity::new(1);
         repository
-            .save(stub_entity)
+            .create(stub_entity)
             .await
             .expect("Failed to create entity");
 
@@ -133,7 +133,7 @@ mod tests {
         let repository: InMemoryRepository<StubId, StubEntity> = InMemoryRepository::new();
         let stub_entity = StubEntity::new(1);
         repository
-            .save(stub_entity.clone())
+            .create(stub_entity.clone())
             .await
             .expect("Failed to create entity");
         repository
@@ -155,7 +155,7 @@ mod tests {
         for iteration in 1..10 {
             let stub_entity = StubEntity::new(iteration);
             repository
-                .save(stub_entity)
+                .create(stub_entity)
                 .await
                 .expect("Failed to create entity");
         }

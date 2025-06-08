@@ -14,13 +14,13 @@ pub async fn start_write_worker(
         match op {
             WriteOperation::CreateTopic(topic) => {
                 topic_repository
-                    .save(topic)
+                    .create(topic)
                     .await
                     .map_err(|e| QueueError::OperationFailed(e.to_string()))?;
             }
             WriteOperation::AddComment(comment) => {
                 comment_repository
-                    .save(comment)
+                    .create(comment)
                     .await
                     .map_err(|e| QueueError::OperationFailed(e.to_string()))?;
             }

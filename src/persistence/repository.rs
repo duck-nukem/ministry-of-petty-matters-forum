@@ -113,7 +113,7 @@ where
     Entity: Send + Sync + HasId<ID>,
 {
     async fn list(&self, list_parameters: ListParameters) -> Result<Page<Entity>, RepositoryError>;
-    async fn save(&self, entity: Entity) -> Result<(), RepositoryError>;
+    async fn create(&self, entity: Entity) -> Result<(), RepositoryError>;
     async fn get_by_id(&self, id: &ID) -> Result<Option<Entity>, RepositoryError>;
     async fn delete(&self, id: &ID) -> Result<(), RepositoryError>;
 }

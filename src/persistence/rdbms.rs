@@ -91,7 +91,7 @@ where
     }
 
     #[allow(clippy::cast_possible_wrap)]
-    async fn save(&self, entity: ModelType) -> Result<(), RepositoryError> {
+    async fn create(&self, entity: ModelType) -> Result<(), RepositoryError> {
         let id = entity.id();
         let active_model: DbRecord::ActiveModel = DbRecord::model_to_record(entity);
 

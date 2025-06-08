@@ -1,12 +1,11 @@
 use crate::authn::views::auth_router;
 use crate::config::APP_CONFIG;
 use crate::error::AnyError;
+use crate::petty_matters::service::petty_matters_service_factory;
 use crate::petty_matters::views::petty_matters_router;
 use axum::response::Redirect;
 use axum::{Router, routing::get};
-use petty_matters::service;
-use sea_orm::{ConnectOptions, Database, DatabaseConnection, DbErr};
-use std::time::Duration;
+use persistence::rdbms;
 use tower_http::services::ServeDir;
 
 mod authn;
@@ -26,8 +25,8 @@ static MAIN_ENTRY_POINT: &str = "/petty-matters";
 async fn main() -> Result<(), AnyError> {
     println!("Starting up");
 
-    let database_connection = connect_to_database(&APP_CONFIG.database_url).await;
-    let petty_matters_service = service::petty_matters_service_factory(database_connection)?;
+    let database_connection = rdbms::connect(&APP_CONFIG.database_url).await;
+    let petty_matters_service = petty_matters_service_factory(database_connection)?;
 
     println!("Configuring routes and middlewares");
     let app = Router::new()
@@ -42,19 +41,6 @@ async fn main() -> Result<(), AnyError> {
     run_server(app, APP_CONFIG.get_address()).await?;
 
     Ok(())
-}
-
-async fn connect_to_database(database_url: &String) -> Result<DatabaseConnection, DbErr> {
-    println!("Attempting to connect to the database");
-    let mut connection_options = ConnectOptions::new(database_url);
-    connection_options
-        .min_connections(5)
-        .max_connections(20)
-        .connect_timeout(Duration::from_secs(5))
-        .idle_timeout(Duration::from_secs(30))
-        .sqlx_logging(false);
-
-    Database::connect(connection_options).await
 }
 
 async fn run_server(app: Router, address: String) -> Result<(), AnyError> {

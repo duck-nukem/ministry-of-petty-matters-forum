@@ -2,8 +2,12 @@ use crate::persistence::repository::{HasId, ListParameters, Page, Repository, Re
 use crate::views::pagination::Ordering;
 use async_trait::async_trait;
 use sea_orm::sea_query::Expr;
-use sea_orm::{Condition, DatabaseConnection, DbErr, DeriveColumn, EntityTrait, EnumIter};
+use sea_orm::{
+    Condition, ConnectOptions, Database, DatabaseConnection, DbErr, DeriveColumn, EntityTrait,
+    EnumIter,
+};
 use sea_orm::{IntoActiveModel, Order, PrimaryKeyTrait, QueryFilter, QueryOrder, QuerySelect};
+use std::time::Duration;
 
 pub trait ModelDatabaseInterface<E: EntityTrait, M, Id> {
     fn filter_from_params(list_parameters: &ListParameters) -> Condition;
@@ -115,4 +119,17 @@ where
 
         Ok(())
     }
+}
+
+pub async fn connect(database_url: &String) -> Result<DatabaseConnection, DbErr> {
+    println!("Attempting to connect to the database");
+    let mut connection_options = ConnectOptions::new(database_url);
+    connection_options
+        .min_connections(5)
+        .max_connections(20)
+        .connect_timeout(Duration::from_secs(5))
+        .idle_timeout(Duration::from_secs(30))
+        .sqlx_logging(false);
+
+    Database::connect(connection_options).await
 }

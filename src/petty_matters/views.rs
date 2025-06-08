@@ -1,6 +1,6 @@
 use crate::authn::session::User;
-use crate::persistence::repository::{ListParameters, Page, PageNumber, PageSize, Repository};
-use crate::petty_matters::comment::{Comment, CommentId};
+use crate::persistence::repository::{ListParameters, Page, PageNumber, PageSize};
+use crate::petty_matters::comment::Comment;
 use crate::petty_matters::service::PettyMattersService;
 use crate::petty_matters::topic::{Topic, TopicId};
 use crate::queue::base::Queue;
@@ -53,15 +53,13 @@ struct CommentForm {
     content: String,
 }
 
-async fn list_petty_matters<T, C, Q>(
+async fn list_petty_matters<Q>(
     user: User,
     nonce: Nonce,
-    State(service): State<Arc<PettyMattersService<T, C, Q>>>,
+    State(service): State<Arc<PettyMattersService<Q>>>,
     page_filters: Query<PageFilters>,
 ) -> Result<HtmlResponse, StatusCode>
 where
-    T: Repository<TopicId, Topic> + Send + Sync,
-    C: Repository<CommentId, Comment> + Send + Sync,
     Q: Queue + Send + Sync,
 {
     let list_parameters = ListParameters::from_query_params(&page_filters);
@@ -82,14 +80,12 @@ async fn render_registration_form(nonce: Nonce, user: User) -> Result<HtmlRespon
     Ok(HtmlResponse::from_string(template))
 }
 
-async fn register_petty_matter<T, C, Q>(
+async fn register_petty_matter<Q>(
     user: User,
-    State(service): State<Arc<PettyMattersService<T, C, Q>>>,
+    State(service): State<Arc<PettyMattersService<Q>>>,
     form: Form<PettyMattersRegistrationForm>,
 ) -> Result<Response, StatusCode>
 where
-    T: Repository<TopicId, Topic> + Send + Sync,
-    C: Repository<CommentId, Comment> + Send + Sync,
     Q: Queue + Send + Sync,
 {
     let topic = Topic::new(form.subject.clone(), form.content.clone(), user);
@@ -100,14 +96,12 @@ where
     Ok(Redirect::to("/petty-matters").into_response())
 }
 
-async fn view_petty_matter<T, C, Q>(
+async fn view_petty_matter<Q>(
     nonce: Nonce,
     Path(topic_id): Path<TopicId>,
-    State(service): State<Arc<PettyMattersService<T, C, Q>>>,
+    State(service): State<Arc<PettyMattersService<Q>>>,
 ) -> Result<HtmlResponse, StatusCode>
 where
-    T: Repository<TopicId, Topic> + Send + Sync,
-    C: Repository<CommentId, Comment> + Send + Sync,
     Q: Queue + Send + Sync,
 {
     let topic = match service.get_topic(&topic_id).await {
@@ -138,15 +132,13 @@ where
     Ok(HtmlResponse::cached(template, Seconds(60)))
 }
 
-async fn add_comment<T, C, Q>(
+async fn add_comment<Q>(
     user: User,
     Path(topic_id): Path<TopicId>,
-    State(service): State<Arc<PettyMattersService<T, C, Q>>>,
+    State(service): State<Arc<PettyMattersService<Q>>>,
     form: Form<CommentForm>,
 ) -> Result<impl IntoResponse, StatusCode>
 where
-    T: Repository<TopicId, Topic> + Send + Sync,
-    C: Repository<CommentId, Comment> + Send + Sync,
     Q: Queue + Send + Sync,
 {
     service
@@ -156,10 +148,8 @@ where
     Ok(Redirect::to(&format!("/petty-matters/{topic_id}")))
 }
 
-pub fn topics_router<T, C, Q>(service: Arc<PettyMattersService<T, C, Q>>) -> Router
+pub fn topics_router<Q>(service: Arc<PettyMattersService<Q>>) -> Router
 where
-    T: Repository<TopicId, Topic> + Send + Sync + 'static,
-    C: Repository<CommentId, Comment> + Send + Sync + 'static,
     Q: Queue + Send + Sync + 'static,
 {
     Router::new()

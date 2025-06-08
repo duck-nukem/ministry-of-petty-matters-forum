@@ -17,26 +17,22 @@ static CACHE: LazyLock<Cache<ListParameters, Page<Topic>>> = LazyLock::new(|| {
         .build()
 });
 
-pub struct PettyMattersService<T, C, Q>
+pub struct PettyMattersService<Q>
 where
-    T: Repository<TopicId, Topic> + Send + Sync,
-    C: Repository<CommentId, Comment> + Send + Sync,
     Q: Queue + Send + Sync,
 {
-    pub topic_repository: Arc<T>,
-    pub comment_repository: Arc<C>,
+    pub topic_repository: Arc<dyn Repository<TopicId, Topic> + Send + Sync>,
+    pub comment_repository: Arc<dyn Repository<CommentId, Comment> + Send + Sync>,
     pub write_queue: Arc<Q>,
 }
 
-impl<T, C, Q> PettyMattersService<T, C, Q>
+impl<Q> PettyMattersService<Q>
 where
-    T: Repository<TopicId, Topic> + Send + Sync,
-    C: Repository<CommentId, Comment> + Send + Sync,
     Q: Queue + Send + Sync,
 {
     pub const fn new(
-        topic_repository: Arc<T>,
-        comment_repository: Arc<C>,
+        topic_repository: Arc<dyn Repository<TopicId, Topic> + Send + Sync>,
+        comment_repository: Arc<dyn Repository<CommentId, Comment> + Send + Sync>,
         write_queue: Arc<Q>,
     ) -> Self {
         Self {
@@ -111,11 +107,7 @@ mod tests {
     use crate::petty_matters::topic::Topic;
     use crate::queue::stub_queue::StubQueue;
 
-    fn setup_service() -> PettyMattersService<
-        InMemoryRepository<TopicId, Topic>,
-        InMemoryRepository<CommentId, Comment>,
-        StubQueue,
-    > {
+    fn setup_service() -> PettyMattersService<StubQueue> {
         let topic_repository = Arc::new(InMemoryRepository::new());
         let comment_repository = Arc::new(InMemoryRepository::new());
         let queue = StubQueue::new(topic_repository.clone(), comment_repository.clone());

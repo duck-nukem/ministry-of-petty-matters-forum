@@ -92,14 +92,9 @@ where
 
     #[allow(clippy::cast_possible_wrap)]
     async fn create(&self, entity: ModelType) -> Result<(), RepositoryError> {
-        let id = entity.id();
-        let active_model: DbRecord::ActiveModel = DbRecord::model_to_record(entity);
-
-        if let Some(_id_already_exists) = &self.get_by_id(&id).await? {
-            DbRecord::update(active_model).exec(&self.db).await?;
-        } else {
-            DbRecord::insert(active_model).exec(&self.db).await?;
-        }
+        DbRecord::insert(DbRecord::model_to_record(entity))
+            .exec(&self.db)
+            .await?;
 
         Ok(())
     }
